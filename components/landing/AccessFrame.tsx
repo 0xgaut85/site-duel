@@ -1,6 +1,7 @@
 "use client";
 
 import { useCarousel } from "@/components/carousel/CarouselContext";
+import { X_TWITTER_URL } from "@/components/layout/SiteChrome";
 import { WaitlistForm } from "@/components/ui/WaitlistForm";
 
 /*
@@ -49,7 +50,7 @@ export function AccessFrame() {
 
       {/* Top rail — eyebrow (left) and back-link (right). Pinned. */}
       <div
-        className="absolute left-0 right-0 z-10 flex items-center justify-between"
+        className="absolute left-0 right-0 z-10 flex items-start justify-between"
         style={{
           top: "var(--frame-padding)",
           paddingLeft: "var(--frame-padding)",
@@ -59,15 +60,25 @@ export function AccessFrame() {
         <span className="font-mono text-[10px] tracking-[0.3em] text-paper-faint">
           04 · REQUEST ACCESS
         </span>
-        <button
-          type="button"
-          onClick={() => {
-            if (startIndex >= 0) goTo(startIndex, { force: true });
-          }}
-          className="relative z-50 font-mono text-[10px] tracking-[0.3em] text-paper-faint hover:text-paper transition-colors pointer-events-auto cursor-pointer"
-        >
-          ← BACK TO START
-        </button>
+        <div className="relative z-50 flex flex-col items-end gap-3 pointer-events-auto">
+          <button
+            type="button"
+            onClick={() => {
+              if (startIndex >= 0) goTo(startIndex, { force: true });
+            }}
+            className="font-mono text-[10px] tracking-[0.3em] text-paper-faint hover:text-paper transition-colors cursor-pointer"
+          >
+            ← BACK TO START
+          </button>
+          <a
+            href={X_TWITTER_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-[10px] tracking-[0.28em] text-paper-faint hover:text-paper transition-colors"
+          >
+            X / TWITTER
+          </a>
+        </div>
       </div>
 
       {/* Content column — left-anchored, vertically centred. */}
