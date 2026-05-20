@@ -20,7 +20,7 @@ import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { magicLink } from "better-auth/plugins";
 import { Resend } from "resend";
 import { eq } from "drizzle-orm";
-import { db, schema } from "@/db/client";
+import { getDb, schema } from "@/db/client";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const resendFrom =
@@ -38,75 +38,103 @@ if (!process.env.BETTER_AUTH_SECRET) {
   );
 }
 
-export const auth = betterAuth({
-  appName: "Duel Agents",
-  baseURL,
-  secret: process.env.BETTER_AUTH_SECRET ?? "dev-secret-do-not-use-in-prod",
-  database: drizzleAdapter(db, {
-    provider: "pg",
-    schema: {
-      user: schema.users,
-      session: schema.sessions,
-      account: schema.accountsAuth,
-      verification: schema.verifications,
-    },
-  }),
-  /* No password sign-ins — magic-link only. */
-  emailAndPassword: { enabled: false },
-  /* Sessions are seven days. Refreshable on activity (Better-Auth's
-   * default). Long enough that day-to-day use feels stateless, short
-   * enough that a leaked session token doesn't outlive the leak. */
-  session: {
-    expiresIn: 60 * 60 * 24 * 7,
-    updateAge: 60 * 60 * 24,
-  },
-  plugins: [
-    magicLink({
-      /* `sendMagicLink` is called by Better-Auth whenever a user
-       * requests sign-in. We intercept here to enforce the invite-only
-       * gate: silently no-op if the email has never been invited.
-       *
-       * Returning without throwing keeps the UI response generic
-       * ("we sent you a link if your email is on file") — preventing
-       * email-enumeration of who is and isn't an invited user. */
-      sendMagicLink: async ({ email, url, token: _token }) => {
-        const existing = await db
-          .select({ id: schema.users.id })
-          .from(schema.users)
-          .where(eq(schema.users.email, email.toLowerCase()))
-          .limit(1);
-
-        if (existing.length === 0) {
-          // Email not invited yet. Silently do nothing.
-          return;
-        }
-
-        if (!resend) {
-          // eslint-disable-next-line no-console
-          console.warn(
-            "[auth] RESEND_API_KEY missing — magic-link email skipped. Link was:",
-            url,
-          );
-          return;
-        }
-
-        await resend.emails.send({
-          from: resendFrom,
-          to: email,
-          subject: "Your Duel Agents sign-in link",
-          html: magicLinkEmailHtml(url),
-          text: magicLinkEmailText(url),
-        });
+function createAuth() {
+  const db = getDb();
+  return betterAuth({
+    appName: "Duel Agents",
+    baseURL,
+    secret: process.env.BETTER_AUTH_SECRET ?? "dev-secret-do-not-use-in-prod",
+    database: drizzleAdapter(db, {
+      provider: "pg",
+      schema: {
+        user: schema.users,
+        session: schema.sessions,
+        account: schema.accountsAuth,
+        verification: schema.verifications,
       },
-      /* The link is single-use and expires in 15 minutes. The
-       * verification row is auto-deleted by Better-Auth on use. */
-      expiresIn: 60 * 15,
     }),
-  ],
-  trustedOrigins: [baseURL],
+    /* No password sign-ins — magic-link only. */
+    emailAndPassword: { enabled: false },
+    /* Sessions are seven days. Refreshable on activity (Better-Auth's
+     * default). Long enough that day-to-day use feels stateless, short
+     * enough that a leaked session token doesn't outlive the leak. */
+    session: {
+      expiresIn: 60 * 60 * 24 * 7,
+      updateAge: 60 * 60 * 24,
+    },
+    plugins: [
+      magicLink({
+        /* `sendMagicLink` is called by Better-Auth whenever a user
+         * requests sign-in. We intercept here to enforce the invite-only
+         * gate: silently no-op if the email has never been invited.
+         *
+         * Returning without throwing keeps the UI response generic
+         * ("we sent you a link if your email is on file") — preventing
+         * email-enumeration of who is and isn't an invited user. */
+        sendMagicLink: async ({ email, url, token: _token }) => {
+          const existing = await db
+            .select({ id: schema.users.id })
+            .from(schema.users)
+            .where(eq(schema.users.email, email.toLowerCase()))
+            .limit(1);
+
+          if (existing.length === 0) {
+            // Email not invited yet. Silently do nothing.
+            return;
+          }
+
+          if (!resend) {
+            // eslint-disable-next-line no-console
+            console.warn(
+              "[auth] RESEND_API_KEY missing — magic-link email skipped. Link was:",
+              url,
+            );
+            return;
+          }
+
+          await resend.emails.send({
+            from: resendFrom,
+            to: email,
+            subject: "Your Duel Agents sign-in link",
+            html: magicLinkEmailHtml(url),
+            text: magicLinkEmailText(url),
+          });
+        },
+        /* The link is single-use and expires in 15 minutes. The
+         * verification row is auto-deleted by Better-Auth on use. */
+        expiresIn: 60 * 15,
+      }),
+    ],
+    trustedOrigins: [baseURL],
+  });
+}
+
+type AuthInstance = ReturnType<typeof createAuth>;
+
+let authInstance: AuthInstance | undefined;
+
+/** Lazily constructed so `next build` does not require DATABASE_URL. */
+export function getAuth(): AuthInstance {
+  if (!authInstance) authInstance = createAuth();
+  return authInstance;
+}
+
+/**
+ * Proxy defers Better-Auth init until first use (runtime), not import
+ * time (build). Existing `auth.api.*` call sites keep working.
+ */
+export const auth: AuthInstance = new Proxy({} as AuthInstance, {
+  get(_target, prop) {
+    const instance = getAuth();
+    const value = Reflect.get(instance, prop, instance);
+    if (typeof value === "function") {
+      return (value as (...args: unknown[]) => unknown).bind(instance);
+    }
+    return value;
+  },
 });
 
-export type Session = typeof auth.$Infer.Session;
+export type Session = AuthInstance["$Infer"]["Session"];
 
 /* ─────────────────────────────────────────────────────────── email templates
  *

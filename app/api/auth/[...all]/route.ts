@@ -12,19 +12,24 @@
  */
 
 import { toNextJsHandler } from "better-auth/next-js";
-import { auth } from "@/lib/auth";
+import { getAuth } from "@/lib/auth";
 import { blockIfNotLive } from "@/lib/release";
 
-const handlers = toNextJsHandler(auth);
+let handlers: ReturnType<typeof toNextJsHandler> | undefined;
+
+function authHandlers() {
+  if (!handlers) handlers = toNextJsHandler(getAuth());
+  return handlers;
+}
 
 export async function GET(request: Request) {
   const blocked = blockIfNotLive();
   if (blocked) return blocked;
-  return handlers.GET(request);
+  return authHandlers().GET(request);
 }
 
 export async function POST(request: Request) {
   const blocked = blockIfNotLive();
   if (blocked) return blocked;
-  return handlers.POST(request);
+  return authHandlers().POST(request);
 }
