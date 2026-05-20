@@ -1,12 +1,12 @@
 import type { Metadata, Viewport } from "next";
-import { Inter, Space_Grotesk, Geist_Mono } from "next/font/google";
+import { Inter, Bricolage_Grotesque, Geist_Mono } from "next/font/google";
 import "./globals.css";
 
 /*
- * Typography mirrored from ekarobotics.com's system:
- *   - Control Upright (Signal)      →  Space Grotesk   (display, wide sans)
- *   - ABC Whyte Semi-Mono (Dinamo)  →  Geist Mono      (semi-mono UI labels)
- *   - Inter (used directly on Eka)  →  Inter           (body copy)
+ * Typography:
+ *   - Bricolage Grotesque  →  display (titles, wordmark)
+ *   - Geist Mono           →  semi-mono UI labels
+ *   - Inter                →  body copy
  *
  * Three Google Fonts, all OFL — no licensing concerns.
  */
@@ -17,9 +17,8 @@ const inter = Inter({
   display: "swap",
 });
 
-const spaceGrotesk = Space_Grotesk({
+const display = Bricolage_Grotesque({
   subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
   variable: "--display-font",
   display: "swap",
 });
@@ -66,7 +65,7 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      className={`${inter.variable} ${spaceGrotesk.variable} ${geistMono.variable}`}
+      className={`${inter.variable} ${display.variable} ${geistMono.variable}`}
     >
       <body>
         <a

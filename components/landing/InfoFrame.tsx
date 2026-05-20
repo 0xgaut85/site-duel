@@ -31,7 +31,7 @@ type BoxId = "what" | "how" | "proof" | "next";
  * and clamp; every body paragraph uses the SAME font and clamp. The boxes
  * differ in content, not in typography, so the grid reads as one piece.
  *
- *   - title  : Space Grotesk (font-display), medium, large display size
+ *   - title  : Bricolage Grotesque (font-display), medium, large display size
  *   - eyebrow: Geist Mono (font-mono), the 01 · WHAT corner label
  *   - body   : Inter (default), 14–17px fluid
  *   - tag    : Geist Mono (font-mono), small all-caps

@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>post2 — Duel Agents waitlist</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,200..800&family=Geist+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Same CSS vars as app/layout.tsx + globals.css */
+    --display-font: 'Bricolage Grotesque', system-ui, sans-serif;
+    --mono-font: 'Geist Mono', ui-monospace, 'Courier New', monospace;
+    --paper: #ffffff;
+    --paper-faint: #8c8c89;
+    --rust: #c84a1a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body {
+    width: 100%;
+    min-height: 100vh;
+    background: #0d0d0d;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Native post2.png aspect (2336 x 1744) */
+  .poster {
+    position: relative;
+    width: 1168px;
+    height: 872px;
+    background-image: url('post2.png');
+    background-size: cover;
+    background-position: center;
+    background-repeat: no-repeat;
+    overflow: hidden;
+    isolation: isolate;
+  }
+
+  .poster::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse at center, rgba(0,0,0,0.08) 0%, rgba(0,0,0,0.38) 100%);
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .center-stack {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    z-index: 2;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
+    gap: 24px;
+    width: min(520px, 78%);
+  }
+
+  .center-stack .logo {
+    display: block;
+    width: 112px;
+    height: 112px;
+    object-fit: contain;
+    filter: brightness(0) invert(1);
+    margin-bottom: 4px;
+  }
+
+  /* font-display — titles (AccessFrame h2) */
+  .center-stack .title {
+    font-family: var(--display-font);
+    font-weight: 500;
+    font-size: 48px;
+    line-height: 0.98;
+    letter-spacing: -0.025em;
+    color: var(--paper);
+  }
+
+  /* font-mono — UI / label copy (WaitlistForm, AccessFrame eyebrows) */
+  .center-stack .body {
+    font-family: var(--mono-font);
+    font-weight: 400;
+    font-size: 15px;
+    line-height: 1.5;
+    letter-spacing: normal;
+    text-transform: none;
+    color: var(--paper-faint);
+    max-width: 38ch;
+  }
+
+  .center-stack .body .accent {
+    color: var(--rust);
+  }
+</style>
+</head>
+<body>
+  <div class="poster">
+    <div class="center-stack">
+      <img class="logo" src="logo.png?v=2" alt="Duel Agents logo" />
+      <h1 class="title">Join Waitlist</h1>
+      <p class="body">
+        Become a <span class="accent">Duel private tester</span> and race the models before anyone else does.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
