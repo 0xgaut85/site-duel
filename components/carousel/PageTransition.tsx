@@ -128,35 +128,45 @@ function Content({ duration }: { duration: number }) {
     <div
       ref={wrapRef}
       className="absolute inset-0 flex flex-col items-center justify-center"
-      style={{ opacity: 0, willChange: "opacity", gap: "clamp(28px, 5vmin, 56px)" }}
+      style={{ opacity: 0, willChange: "opacity" }}
     >
-      <span
-        className="font-display font-medium text-ink select-none"
-        style={{
-          fontSize: "clamp(28px, 5vmin, 64px)",
-          letterSpacing: "0.16em",
-          lineHeight: 1,
-        }}
+      {/* Single centered column — wordmark + logo share one axis so
+          letter-spacing on the title cannot pull it off-center. */}
+      <div
+        className="flex flex-col items-center justify-center"
+        style={{ gap: "clamp(28px, 5vmin, 56px)" }}
       >
-        DUEL&nbsp;&nbsp;AGENTS
-      </span>
+        <p
+          className="font-display font-medium text-ink select-none whitespace-nowrap text-center"
+          style={{
+            fontSize: "clamp(28px, 5vmin, 64px)",
+            letterSpacing: "0.16em",
+            lineHeight: 1,
+            margin: 0,
+          }}
+        >
+          DUEL&nbsp;AGENTS
+        </p>
 
-      {/* Plain <img> with the white-tint filter — no positioning wrapper,
-          no background, no border, no shadow. Just the alpha-masked logo
-          shape rotating in place. */}
-      <img
-        data-spinner
-        src={LOGO_SRC}
-        alt=""
-        style={{
-          width: "clamp(48px, 7vmin, 88px)",
-          height: "clamp(48px, 7vmin, 88px)",
-          objectFit: "contain",
-          filter: "brightness(0)",
-          willChange: "transform",
-          display: "block",
-        }}
-      />
+        <div
+          data-spinner
+          className="flex items-center justify-center"
+          style={{ transformOrigin: "50% 50%" }}
+        >
+          <img
+            src={LOGO_SRC}
+            alt=""
+            style={{
+              width: "clamp(48px, 7vmin, 88px)",
+              height: "clamp(48px, 7vmin, 88px)",
+              objectFit: "contain",
+              filter: "brightness(0)",
+              willChange: "transform",
+              display: "block",
+            }}
+          />
+        </div>
+      </div>
     </div>
   );
 }

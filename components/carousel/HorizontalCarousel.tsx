@@ -18,6 +18,7 @@ import {
 import { useKeyboardNav } from "./useKeyboardNav";
 import { useTouchSwipe } from "./useTouchSwipe";
 import { PageTransition } from "./PageTransition";
+import { SiteChrome } from "@/components/layout/SiteChrome";
 
 interface FrameEntry extends FrameMeta {
   element: React.ReactNode;
@@ -65,18 +66,23 @@ export function HorizontalCarousel({ frames, children }: Props) {
   );
 
   const goTo = useCallback(
-    (rawIndex: number) => {
+    (rawIndex: number, options?: { force?: boolean }) => {
       const target = Math.max(0, Math.min(frameCount - 1, rawIndex));
-      if (target === activeIndexRef.current) return;
+      const sameIndex = target === activeIndexRef.current;
+
+      if (sameIndex && !options?.force) return;
 
       // Reset the destination's nested handler so it starts on its first
       // sub-panel each time the user enters it.
       nestedHandlersRef.current.get(target)?.reset?.();
 
       activeIndexRef.current = target;
-      setActiveIndex(target);
+      if (!sameIndex) setActiveIndex(target);
+
+      const snapX = -target * viewportWidthRef.current;
 
       if (reducedMotion) {
+        trackX.set(snapX);
         const node = document.querySelector<HTMLElement>(
           `[data-carousel-track] > section[data-frame-index="${target}"]`,
         );
@@ -88,11 +94,24 @@ export function HorizontalCarousel({ frames, children }: Props) {
       // a quick second flick doesn't queue up a chain of transitions.
       cooldownUntilRef.current = performance.now() + COOLDOWN_MS;
 
-      // Delay the slide motion so it happens behind the black hold of the
+      if (sameIndex && options?.force) {
+        // Explicit navigation (e.g. BACK TO START) — snap even if the
+        // index already matches but the track has drifted out of sync.
+        animate(trackX, snapX, {
+          type: "spring",
+          stiffness: 200,
+          damping: 30,
+          mass: 0.9,
+          restDelta: 0.001,
+        });
+        return;
+      }
+
+      // Delay the slide motion so it happens behind the hold of the
       // transition overlay — the new page is in place by the time the
       // overlay starts to fade out.
       setTimeout(() => {
-        animate(trackX, -target * viewportWidthRef.current, {
+        animate(trackX, snapX, {
           type: "spring",
           stiffness: 200,
           damping: 30,
@@ -218,6 +237,7 @@ export function HorizontalCarousel({ frames, children }: Props) {
 
   return (
     <CarouselContext.Provider value={value}>
+      <SiteChrome />
       <CarouselInputs />
       {children}
       <main

@@ -537,19 +537,22 @@ function RestingCube({
         aria-label="Logo cube, hover to pause"
         className="absolute inset-0 outline-none"
         style={{
-          ["--side" as string]: sideVar,
-          perspective: spec.variant === "matte" ? 1400 : 700,
           opacity: hovered ? 0.97 : 1,
           transition: "opacity 200ms ease",
         }}
       >
-        <RestingCubeMesh
-          rotY={rotY}
-          faces={spec.faces}
-          variant={spec.variant}
-          topFace={spec.topFace}
-          bottomFace={spec.bottomFace}
-        />
+        <CubeStage
+          sideVar={sideVar}
+          perspective={spec.variant === "matte" ? 1400 : 700}
+        >
+          <RestingCubeMesh
+            rotY={rotY}
+            faces={spec.faces}
+            variant={spec.variant}
+            topFace={spec.topFace}
+            bottomFace={spec.bottomFace}
+          />
+        </CubeStage>
       </div>
     </div>
   );
@@ -1137,36 +1140,24 @@ function PhysicsCube({
    * positioning. We use `top: 0; left: 0` + translate so a single
    * GPU transform drives everything.
    */
-  const translate = useTransform(
-    [mv.x, mv.y],
-    ([x, y]: number[]) => `translate3d(${x}px, ${y}px, 0) translate(-50%, -50%)`,
-  );
-
   return (
     <motion.div
       ref={measureRef}
-      className="absolute"
+      className="absolute top-0 left-0 pointer-events-auto"
       style={{
-        top: 0,
-        left: 0,
         width: spec.size,
         height: spec.size,
-        transform: translate,
+        x: mv.x,
+        y: mv.y,
+        translateX: "-50%",
+        translateY: "-50%",
         willChange: "transform",
-        // Re-enable pointer events on the cube itself so the cursor
-        // can interact with it; the outer physics layer is
-        // `pointer-events-none` so the layer doesn't shadow the
-        // grid captions or frame label sitting beneath it.
-        pointerEvents: "auto",
       }}
     >
       <CubeFloorShadow tone={spec.variant === "paper" ? "warm" : "cool"} />
-      <div
-        className="absolute inset-0 outline-none"
-        style={{
-          ["--side" as string]: sideVar,
-          perspective: spec.variant === "matte" ? 1400 : 700,
-        }}
+      <CubeStage
+        sideVar={sideVar}
+        perspective={spec.variant === "matte" ? 1400 : 700}
       >
         <PhysicsCubeMesh
           rotX={mv.rotX}
@@ -1176,8 +1167,48 @@ function PhysicsCube({
           topFace={spec.topFace}
           bottomFace={spec.bottomFace}
         />
-      </div>
+      </CubeStage>
     </motion.div>
+  );
+}
+
+/* ─────────────────────────── CubeStage ───────────────────────────
+ *
+ * Isolated 3D stage: perspective lives here, and the inner box is
+ * exactly `--side` × `--side` so faces never inherit a stretched
+ * bounding box from `inset: 0` during physics motion.
+ */
+function CubeStage({
+  sideVar,
+  perspective,
+  children,
+}: {
+  sideVar: string;
+  perspective: number;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className="relative h-full w-full outline-none"
+      style={{
+        ["--side" as string]: sideVar,
+        perspective,
+        perspectiveOrigin: "50% 50%",
+      }}
+    >
+      <div
+        className="absolute left-1/2 top-1/2"
+        style={{
+          width: "var(--side)",
+          height: "var(--side)",
+          marginLeft: "calc(var(--side) / -2)",
+          marginTop: "calc(var(--side) / -2)",
+          transformStyle: "preserve-3d",
+        }}
+      >
+        {children}
+      </div>
+    </div>
   );
 }
 
@@ -1203,23 +1234,23 @@ function RestingCubeMesh({
     (ry) => `translateZ(calc(var(--side) / -2)) rotateY(${ry}deg)`,
   );
   return (
-    <div className="relative h-full w-full">
-      <motion.div
-        className="absolute inset-0"
-        style={{
-          transformStyle: "preserve-3d",
-          transform,
-          willChange: "transform",
-        }}
-      >
-        <CubeFaces
-          faces={faces}
-          variant={variant}
-          topFace={topFace}
-          bottomFace={bottomFace}
-        />
-      </motion.div>
-    </div>
+    <motion.div
+      style={{
+        width: "var(--side)",
+        height: "var(--side)",
+        transformStyle: "preserve-3d",
+        transformOrigin: "50% 50%",
+        transform,
+        willChange: "transform",
+      }}
+    >
+      <CubeFaces
+        faces={faces}
+        variant={variant}
+        topFace={topFace}
+        bottomFace={bottomFace}
+      />
+    </motion.div>
   );
 }
 
@@ -1245,23 +1276,23 @@ function PhysicsCubeMesh({
       `translateZ(calc(var(--side) / -2)) rotateX(${rx}deg) rotateY(${ry}deg)`,
   );
   return (
-    <div className="relative h-full w-full">
-      <motion.div
-        className="absolute inset-0"
-        style={{
-          transformStyle: "preserve-3d",
-          transform,
-          willChange: "transform",
-        }}
-      >
-        <CubeFaces
-          faces={faces}
-          variant={variant}
-          topFace={topFace}
-          bottomFace={bottomFace}
-        />
-      </motion.div>
-    </div>
+    <motion.div
+      style={{
+        width: "var(--side)",
+        height: "var(--side)",
+        transformStyle: "preserve-3d",
+        transformOrigin: "50% 50%",
+        transform,
+        willChange: "transform",
+      }}
+    >
+      <CubeFaces
+        faces={faces}
+        variant={variant}
+        topFace={topFace}
+        bottomFace={bottomFace}
+      />
+    </motion.div>
   );
 }
 
@@ -1317,8 +1348,14 @@ function SideFace({
   const angle = index * STEP_DEG;
   return (
     <div
-      className="absolute inset-0"
+      className="absolute"
       style={{
+        width: "var(--side)",
+        height: "var(--side)",
+        left: "50%",
+        top: "50%",
+        marginLeft: "calc(var(--side) / -2)",
+        marginTop: "calc(var(--side) / -2)",
         transform: `rotateY(${angle}deg) translateZ(calc(var(--side) / 2))`,
         backfaceVisibility: "hidden",
         transformStyle: "preserve-3d",
@@ -1372,8 +1409,14 @@ function CapFace({
       // there is a brand on the cap, the LogoFace's own <img alt>
       // becomes meaningful and we let it through to assistive tech.
       aria-hidden={face ? undefined : true}
-      className="absolute inset-0"
+      className="absolute"
       style={{
+        width: "var(--side)",
+        height: "var(--side)",
+        left: "50%",
+        top: "50%",
+        marginLeft: "calc(var(--side) / -2)",
+        marginTop: "calc(var(--side) / -2)",
         transform: `rotateX(${rotateXDeg}deg) translateZ(calc(var(--side) / 2))`,
         backfaceVisibility: "hidden",
         transformStyle: "preserve-3d",

@@ -28,7 +28,7 @@ export interface CarouselValue {
   frameCount: number;
   frames: FrameMeta[];
   activeIndex: number;
-  goTo: (index: number) => void;
+  goTo: (index: number, options?: { force?: boolean }) => void;
   /**
    * Registry of nested scroll handlers keyed by parent frame index. The
    * carousel consults `nestedHandlersRef.current[activeIndex]` on each

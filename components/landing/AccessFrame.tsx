@@ -23,7 +23,8 @@ import { WaitlistForm } from "@/components/ui/WaitlistForm";
  * green / rust accents anywhere on this frame.
  */
 export function AccessFrame() {
-  const { goTo } = useCarousel();
+  const { goTo, frames } = useCarousel();
+  const startIndex = frames.findIndex((f) => f.id === "01-landing");
 
   return (
     <div className="relative h-full w-full overflow-hidden text-paper">
@@ -60,8 +61,10 @@ export function AccessFrame() {
         </span>
         <button
           type="button"
-          onClick={() => goTo(0)}
-          className="font-mono text-[10px] tracking-[0.3em] text-paper-faint hover:text-paper transition-colors"
+          onClick={() => {
+            if (startIndex >= 0) goTo(startIndex, { force: true });
+          }}
+          className="relative z-50 font-mono text-[10px] tracking-[0.3em] text-paper-faint hover:text-paper transition-colors pointer-events-auto cursor-pointer"
         >
           ← BACK TO START
         </button>
