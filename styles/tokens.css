@@ -1,0 +1,38 @@
+/*
+ * Duel Agents — design tokens (minimalist rewrite)
+ * Three-frame landing: white → black → white.
+ * Two colors, one accent, type via CSS vars from app/layout.tsx.
+ */
+
+:root {
+  /* ----- Surfaces --------------------------------------------------------- */
+  /* Pure white for the landing & access frames; near-black for the info frame.
+     We keep a barely-warm off-black instead of #000 so the 3D logo material
+     reflections register as something other than pure void. */
+  --paper: #ffffff;
+  --ink: #0a0a0a;
+
+  /* Tonal greys derived from the two surfaces. Used for secondary text. */
+  --ink-soft: #6a6a66;
+  --ink-faint: #a3a3a0;
+  --paper-soft: #d4d4d2;
+  --paper-faint: #8c8c89;
+
+  /* Single accent. Used sparingly for the access CTA, graph highlight,
+     and mini-agent chips. Matches the orange used in the Twitter post
+     templates so the brand reads identically across web + social. */
+  --rust: #c84a1a;
+
+  /* ----- Easing ----------------------------------------------------------- */
+  --ease-out-quart: cubic-bezier(0.25, 1, 0.5, 1);
+  --ease-out-expo: cubic-bezier(0.19, 1, 0.22, 1);
+  --ease-in-out-soft: cubic-bezier(0.65, 0, 0.35, 1);
+
+  /* ----- Frame / spacing -------------------------------------------------- */
+  --frame-padding: clamp(1.5rem, 4vw, 4rem);
+
+  /* ----- Z-index ladder --------------------------------------------------- */
+  --z-track: 10;
+  --z-veil: 60;
+  --z-cursor: 100;
+}

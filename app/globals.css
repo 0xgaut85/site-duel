@@ -1,0 +1,118 @@
+@import "tailwindcss";
+@import "../styles/tokens.css";
+
+/* ---------- Theme bindings: expose tokens to Tailwind v4 utilities -------- */
+@theme inline {
+  --color-paper: var(--paper);
+  --color-paper-soft: var(--paper-soft);
+  --color-paper-faint: var(--paper-faint);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-rust: var(--rust);
+
+  --font-display: var(--display-font);
+  --font-body: var(--body-font);
+  --font-mono: var(--mono-font);
+}
+
+/* ---------- Base ---------------------------------------------------------- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: var(--body-font);
+  /* Inter stylistic sets: cv11 (single-storey a), cv05 (curl-less l). */
+  font-feature-settings: "cv11", "cv05", "kern", "liga", "calt";
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  scrollbar-width: none;
+  overscroll-behavior: none;
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+}
+
+/* ---------- Typography utilities ----------------------------------------- */
+.font-display {
+  font-family: var(--display-font);
+  font-weight: 400;
+  letter-spacing: -0.02em;
+}
+
+.font-mono {
+  font-family: var(--mono-font);
+  font-weight: 400;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.font-mono-cased {
+  font-family: var(--mono-font);
+  font-weight: 400;
+  letter-spacing: 0.04em;
+}
+
+/* ---------- Selection ---------------------------------------------------- */
+::selection {
+  background: var(--rust);
+  color: var(--paper);
+}
+
+/* ---------- Mobile fallback ---------------------------------------------- */
+/*
+ * Below `md` (768px) the horizontal carousel collapses to a vertical stack.
+ * The fixed viewport becomes relative, the track lays out as a column, and
+ * each frame is full-width auto-height.
+ */
+@media (max-width: 767px) {
+  body [data-carousel-viewport] {
+    position: relative !important;
+    inset: auto !important;
+    overflow: visible !important;
+    height: auto !important;
+  }
+  body [data-carousel-track] {
+    flex-direction: column !important;
+    width: 100vw !important;
+    transform: none !important;
+    height: auto !important;
+  }
+  body [data-carousel-track] > section {
+    width: 100vw !important;
+    height: auto !important;
+    min-height: 100vh !important;
+  }
+  body [data-carousel-proxy] {
+    height: auto !important;
+  }
+}
+
+/* ---------- Reduced motion ----------------------------------------------- */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ---------- Focus -------------------------------------------------------- */
+:focus-visible {
+  outline: 1px solid var(--rust);
+  outline-offset: 2px;
+}
