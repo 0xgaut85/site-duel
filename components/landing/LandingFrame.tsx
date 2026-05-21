@@ -4,6 +4,7 @@ import { useCallback, useRef, useState } from "react";
 import dynamic from "next/dynamic";
 import { AnimatePresence, motion } from "motion/react";
 import { useCarousel } from "@/components/carousel/CarouselContext";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { ScrambleText } from "./ScrambleText";
 import type { LogoHandle } from "./Logo3D";
 
@@ -20,6 +21,7 @@ const Logo3D = dynamic(() => import("./Logo3D").then((m) => m.Logo3D), {
  */
 export function LandingFrame() {
   const { goTo } = useCarousel();
+  const isMobile = useIsMobile();
   const controlsRef = useRef<LogoHandle | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -33,9 +35,15 @@ export function LandingFrame() {
     controlsRef.current?.close();
   }, []);
 
+  const handleToggle = useCallback(() => {
+    if (open) handleLeave();
+    else handleEnter();
+  }, [open, handleEnter, handleLeave]);
+
   return (
     <div
-      className="relative h-full w-full text-ink overflow-hidden"
+      data-landing-frame=""
+      className="relative h-full w-full min-h-[100dvh] text-ink overflow-hidden max-md:overflow-x-clip"
       style={{ padding: "var(--frame-padding)", background: "var(--paper)" }}
     >
       {/* Logo canvas — oversized & absolutely positioned at the viewport
@@ -44,20 +52,35 @@ export function LandingFrame() {
           side before they hit the canvas edge. */}
       <div
         aria-hidden
-        className="absolute left-1/2 top-1/2 z-0 pointer-events-none"
+        data-landing-logo-canvas=""
+        className="absolute left-1/2 top-1/2 z-0 pointer-events-none max-md:w-full max-md:max-w-[100vw] max-md:h-[min(100vw,100dvh)]"
         style={{
-          width: "150vw",
-          height: "150vh",
+          width: isMobile ? "100%" : "150vw",
+          height: isMobile ? "min(100vw, 85dvh)" : "150vh",
+          maxWidth: isMobile ? "100vw" : undefined,
           transform: "translate(-50%, -50%)",
         }}
       >
-        <Logo3D controlsRef={controlsRef} />
+        {isMobile ? (
+          <img
+            src="/logo.png"
+            alt=""
+            className="mx-auto block h-full w-auto max-w-[min(72vw,280px)] object-contain"
+            style={{ filter: "brightness(0)" }}
+            draggable={false}
+          />
+        ) : (
+          <Logo3D controlsRef={controlsRef} />
+        )}
       </div>
 
       {/* Wordmark + subtitle — anchored to the visible viewport center as
           a single stacked block. Sits between the two halves when they
           open. */}
-      <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 pointer-events-none">
+      <div
+        data-landing-wordmark=""
+        className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-4 pointer-events-none"
+      >
         <AnimatePresence>
           {open && (
             <motion.h1
@@ -92,31 +115,39 @@ export function LandingFrame() {
           pointer-events-none so this still receives the events). */}
       <div className="absolute inset-0 z-20 flex items-center justify-center pointer-events-none">
         <div
-          onMouseEnter={handleEnter}
-          onMouseLeave={handleLeave}
+          onMouseEnter={isMobile ? undefined : handleEnter}
+          onMouseLeave={isMobile ? undefined : handleLeave}
+          onClick={isMobile ? handleToggle : undefined}
           onFocus={handleEnter}
           onBlur={handleLeave}
           tabIndex={0}
           role="button"
-          aria-label="Duel Agents, hover to reveal"
+          aria-label={
+            isMobile
+              ? "Duel Agents, tap to reveal"
+              : "Duel Agents, hover to reveal"
+          }
           className="pointer-events-auto outline-none"
           style={{
-            width: "min(70vh, 70vw)",
-            height: "min(60vh, 60vw)",
+            width: "min(70vh, 70vw, 320px)",
+            height: "min(60vh, 60vw, 280px)",
             cursor: "pointer",
           }}
         />
       </div>
 
       {/* Scroll hint — bottom-center, alone. */}
-      <div className="absolute left-0 right-0 bottom-[calc(var(--frame-padding)*2)] z-30 flex flex-col items-center gap-6">
+      <div
+        data-landing-hint=""
+        className="absolute left-0 right-0 bottom-[calc(var(--frame-padding)*2)] z-30 flex flex-col items-center gap-6"
+      >
         <button
           type="button"
           onClick={() => goTo(1)}
           className="font-mono text-[10px] tracking-[0.3em] text-ink-faint hover:text-ink transition-colors flex flex-col items-center gap-2 group"
           aria-label="Scroll to learn more"
         >
-          <span>SCROLL</span>
+          <span>{isMobile ? "NEXT" : "SCROLL"}</span>
           <span
             aria-hidden="true"
             className="block h-6 w-px bg-ink-faint group-hover:bg-ink transition-colors"

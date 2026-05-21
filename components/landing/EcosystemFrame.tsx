@@ -9,6 +9,7 @@ import {
   useRef,
   useState,
 } from "react";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { Panel3D, type FaceVariant } from "./Panel3D";
 import { ScrambleText } from "./ScrambleText";
 
@@ -203,6 +204,8 @@ const CUBE_SPECS: CubeSpec[] = [
 ];
 
 export function EcosystemFrame() {
+  const isMobile = useIsMobile();
+
   // Front-face indices for each cube → drives the live-face caption.
   const [topFront, setTopFront] = useState(0);
   const [midFront, setMidFront] = useState(0);
@@ -256,7 +259,8 @@ export function EcosystemFrame() {
   return (
     <div
       ref={containerRef}
-      className="relative h-full w-full overflow-hidden"
+      data-ecosystem-frame=""
+      className="relative h-full w-full min-h-[100dvh] overflow-hidden max-md:overflow-visible"
       style={{ background: "var(--paper)", color: "var(--ink)" }}
     >
       {/* Frame label. */}
@@ -271,6 +275,7 @@ export function EcosystemFrame() {
           per-face numerals and anchors the asymmetric composition. */}
       <span
         aria-hidden
+        data-ecosystem-ornament=""
         className="absolute font-display font-medium tabular-nums leading-none select-none pointer-events-none z-0"
         style={{
           top: "50%",
@@ -291,24 +296,38 @@ export function EcosystemFrame() {
           The grid slots are always rendered; they hold the cube DOM
           pre-activation, and become invisible placeholders post. */}
       <div
-        className="absolute inset-0 z-10 grid"
+        data-ecosystem-grid=""
+        className="absolute inset-0 z-10 grid max-md:relative max-md:min-h-0 max-md:h-auto max-md:pb-24"
         style={{
           padding: "var(--frame-padding)",
-          gridTemplateColumns: "minmax(0, 1fr) minmax(0, 34ch)",
-          gridTemplateRows: "1fr 2.6fr 1fr",
-          columnGap: "clamp(2rem, 5vw, 5rem)",
-          rowGap: "clamp(1.5rem, 3vw, 2.5rem)",
+          ...(isMobile
+            ? {
+                gridTemplateColumns: "1fr",
+                gridTemplateRows: "repeat(6, auto)",
+                columnGap: 0,
+                rowGap: "clamp(1.25rem, 4vw, 2rem)",
+              }
+            : {
+                gridTemplateColumns: "minmax(0, 1fr) minmax(0, 34ch)",
+                gridTemplateRows: "1fr 2.6fr 1fr",
+                columnGap: "clamp(2rem, 5vw, 5rem)",
+                rowGap: "clamp(1.5rem, 3vw, 2.5rem)",
+              }),
         }}
       >
         <div
           ref={slotRefs.payments}
+          data-ecosystem-slot=""
           className="flex items-center justify-center"
         >
           {!activated && (
             <RestingCube spec={CUBE_SPECS[0]} rotRef={restRotRef} />
           )}
         </div>
-        <div className="flex items-center justify-end text-right">
+        <div
+          data-ecosystem-caption=""
+          className="flex items-center justify-end text-right"
+        >
           <CubeCaption
             tag="PAYMENTS"
             body="Pay with any crypto. Ethereum, Solana, USDC, USDT, and more."
@@ -318,13 +337,17 @@ export function EcosystemFrame() {
 
         <div
           ref={slotRefs.models}
+          data-ecosystem-slot=""
           className="flex items-center justify-center"
         >
           {!activated && (
             <RestingCube spec={CUBE_SPECS[1]} rotRef={restRotRef} />
           )}
         </div>
-        <div className="flex items-center justify-end text-right">
+        <div
+          data-ecosystem-caption=""
+          className="flex items-center justify-end text-right"
+        >
           <CubeCaption
             tag="MODELS"
             body="Duel runs ChatGPT, Claude, Gemini, DeepSeek, Llama, Mistral, Perplexity. Whichever wins your task."
@@ -334,13 +357,17 @@ export function EcosystemFrame() {
 
         <div
           ref={slotRefs.platforms}
+          data-ecosystem-slot=""
           className="flex items-center justify-center"
         >
           {!activated && (
             <RestingCube spec={CUBE_SPECS[2]} rotRef={restRotRef} />
           )}
         </div>
-        <div className="flex items-center justify-end text-right">
+        <div
+          data-ecosystem-caption=""
+          className="flex items-center justify-end text-right"
+        >
           <CubeCaption
             tag="PLATFORMS"
             body="Use Duel with Claude Code, Venice, Nous Research, OpenClaw, Cursor, Codex."

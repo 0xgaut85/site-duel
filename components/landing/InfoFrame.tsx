@@ -1,9 +1,10 @@
 "use client";
 
 import { useState } from "react";
+import { useCarousel } from "@/components/carousel/CarouselContext";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { LargeGraph } from "./LargeGraph";
 import { ScrambleText } from "./ScrambleText";
-import { useCarousel } from "@/components/carousel/CarouselContext";
 
 /*
  * 02 · INFO — four-box grid.
@@ -53,12 +54,14 @@ const TYPE = {
 };
 
 export function InfoFrame() {
+  const isMobile = useIsMobile();
   const [hovered, setHovered] = useState<BoxId | null>(null);
   const idle = hovered === null;
 
   return (
     <div
-      className="relative h-full w-full overflow-hidden"
+      data-info-frame=""
+      className="relative h-full w-full min-h-[100dvh] overflow-hidden max-md:overflow-visible"
       /* Base tone is INK, not PAPER. Every box on this frame is
        * darkBg (dark photo + scrim), and during the hover→idle scrim
        * transition the box's image fades through partial opacity for
@@ -71,8 +74,26 @@ export function InfoFrame() {
     >
       {/* 2 × 2 grid + crosshair dividers. Edge-to-edge — no outer
           padding, no frame label. Each box owns its own corner label. */}
-      <div className="absolute inset-0 z-10">
-        <div className="relative h-full w-full grid grid-cols-2 grid-rows-2">
+      <div
+        data-info-grid-shell=""
+        className="absolute inset-0 z-10 max-md:relative max-md:h-auto"
+      >
+        <div
+          data-info-grid=""
+          className="relative h-full w-full grid max-md:h-auto"
+          style={
+            isMobile
+              ? {
+                  gridTemplateColumns: "1fr",
+                  gridTemplateRows: "repeat(4, auto)",
+                  height: "auto",
+                }
+              : {
+                  gridTemplateColumns: "1fr 1fr",
+                  gridTemplateRows: "1fr 1fr",
+                }
+          }
+        >
           <Box
             id="what"
             label="01 · WHAT"
@@ -201,6 +222,7 @@ function Box({
 
       {/* Content layer — blurred + faded when scrimmed. (z = 1) */}
       <div
+        data-info-box-content=""
         className="relative h-full w-full"
         style={{
           zIndex: 1,

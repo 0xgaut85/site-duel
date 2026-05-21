@@ -54,7 +54,8 @@ export function Footer() {
   return (
     <>
       <footer
-        className="fixed inset-x-0 bottom-0 z-50 pointer-events-none"
+        data-site-footer=""
+        className="fixed inset-x-0 bottom-0 z-50 pointer-events-none max-md:relative max-md:z-10"
         aria-label="Site footer"
       >
         <div
@@ -135,6 +136,7 @@ function DocModal({ kind, onClose }: DocModalProps) {
 
   return (
     <motion.div
+      data-legal-modal=""
       className="fixed inset-0 z-[180] flex items-center justify-center"
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
@@ -160,6 +162,7 @@ function DocModal({ kind, onClose }: DocModalProps) {
       {/* Panel. */}
       <motion.div
         ref={panelRef}
+        data-legal-modal-panel=""
         initial={{ y: 14, scale: 0.985, opacity: 0 }}
         animate={{ y: 0, scale: 1, opacity: 1 }}
         exit={{ y: 10, scale: 0.99, opacity: 0 }}

@@ -1,0 +1,244 @@
+/*
+ * Site-wide mobile layout (≤767px). Applies to every carousel frame
+ * before React hydrates — do not rely on Tailwind max-md alone.
+ */
+
+@media (max-width: 767px) {
+  /* ── Carousel shell (all pages) ── */
+  html,
+  body {
+    overflow-x: clip !important;
+    overflow-y: auto !important;
+    height: auto !important;
+    min-height: 100%;
+    overscroll-behavior: auto;
+    touch-action: pan-y;
+  }
+
+  body [data-carousel-proxy] {
+    position: relative !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow-x: clip !important;
+    overflow-y: visible !important;
+  }
+
+  body [data-carousel-viewport] {
+    position: relative !important;
+    inset: auto !important;
+    overflow: visible !important;
+    height: auto !important;
+    width: 100% !important;
+  }
+
+  body [data-carousel-track] {
+    display: flex !important;
+    flex-direction: column !important;
+    flex-wrap: nowrap !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    transform: none !important;
+    translate: none !important;
+    margin: 0 !important;
+    left: auto !important;
+  }
+
+  body [data-carousel-track] > section {
+    position: relative !important;
+    flex: none !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    min-width: 0 !important;
+    height: auto !important;
+    min-height: 100dvh !important;
+    overflow-x: clip;
+  }
+
+  /* ── 01 Landing ── */
+  [data-landing-frame] {
+    min-height: 100dvh !important;
+    height: auto !important;
+    overflow-x: clip !important;
+    overflow-y: visible !important;
+  }
+
+  [data-landing-logo-canvas] {
+    width: 100% !important;
+    max-width: 100% !important;
+    height: min(72vw, 52dvh) !important;
+  }
+
+  [data-landing-frame] h1 {
+    white-space: normal !important;
+    text-align: center;
+    font-size: clamp(2rem, 11vw, 3.25rem) !important;
+    max-width: 92vw;
+  }
+
+  [data-landing-wordmark] {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+
+  [data-landing-hint] {
+    bottom: calc(var(--frame-padding) + 3.5rem) !important;
+  }
+
+  /* ── 02 Info (four panels → single column) ── */
+  [data-info-frame] {
+    height: auto !important;
+    min-height: 100dvh !important;
+    overflow: visible !important;
+  }
+
+  [data-info-grid-shell] {
+    position: relative !important;
+    inset: auto !important;
+    height: auto !important;
+    width: 100% !important;
+  }
+
+  [data-info-grid] {
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: repeat(4, auto) !important;
+    height: auto !important;
+    width: 100% !important;
+  }
+
+  [data-info-grid] > * {
+    min-height: min(82dvh, 600px) !important;
+    width: 100% !important;
+  }
+
+  [data-info-grid] [data-info-box-content] {
+    font-size: clamp(0.95rem, 3.8vw, 1.05rem) !important;
+  }
+
+  [data-info-grid] h2 {
+    font-size: clamp(1.5rem, 7vw, 2rem) !important;
+  }
+
+  /* ── 03 Ecosystem ── */
+  [data-ecosystem-frame] {
+    height: auto !important;
+    min-height: 100dvh !important;
+    overflow: visible !important;
+    padding-bottom: 2rem;
+  }
+
+  [data-ecosystem-grid] {
+    position: relative !important;
+    inset: auto !important;
+    display: grid !important;
+    grid-template-columns: 1fr !important;
+    grid-template-rows: repeat(6, auto) !important;
+    height: auto !important;
+    width: 100% !important;
+    row-gap: clamp(1.25rem, 4vw, 2rem) !important;
+    column-gap: 0 !important;
+    padding-bottom: 4rem !important;
+  }
+
+  [data-ecosystem-slot] {
+    min-height: clamp(100px, 28vw, 180px);
+    width: 100%;
+  }
+
+  [data-ecosystem-grid] [data-ecosystem-caption] {
+    justify-content: flex-start !important;
+    text-align: left !important;
+    align-items: flex-start !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+  [data-ecosystem-ornament] {
+    font-size: clamp(3.5rem, 32vw, 7rem) !important;
+    opacity: 0.04 !important;
+  }
+
+  /* ── 04 Access ── */
+  [data-access-frame] {
+    min-height: 100dvh !important;
+    height: auto !important;
+    overflow-x: clip !important;
+  }
+
+  [data-access-content] {
+    align-items: flex-start !important;
+    padding-top: calc(var(--frame-padding) * 2 + 5rem) !important;
+    padding-bottom: calc(var(--frame-padding) * 2 + 2rem) !important;
+  }
+
+  [data-access-frame] h2 {
+    font-size: clamp(2rem, 9vw, 2.75rem) !important;
+  }
+
+  [data-access-rail] {
+    gap: 0.75rem;
+  }
+
+  [data-access-rail] .font-mono {
+    font-size: 9px !important;
+    letter-spacing: 0.22em !important;
+  }
+
+  /* ── Global chrome (every page) ── */
+  [data-site-chrome] {
+    mix-blend-mode: normal !important;
+    color: var(--ink) !important;
+    font-size: 9px !important;
+    letter-spacing: 0.22em !important;
+  }
+
+  footer[data-site-footer] {
+    position: relative !important;
+    inset: auto !important;
+    width: 100% !important;
+  }
+
+  footer[data-site-footer] > div {
+    flex-wrap: wrap;
+    row-gap: 0.5rem;
+    padding-bottom: max(0.85rem, env(safe-area-inset-bottom)) !important;
+  }
+
+  [data-legal-modal] {
+    align-items: flex-end !important;
+    padding: 0 !important;
+  }
+
+  [data-legal-modal-panel] {
+    width: 100% !important;
+    max-width: 100% !important;
+    max-height: 92dvh !important;
+    border-radius: 1rem 1rem 0 0 !important;
+  }
+
+  [data-mobile-frame-nav] {
+    display: flex !important;
+  }
+
+  /* Room for fixed bottom nav while scrolling each section */
+  body [data-carousel-track] > section {
+    padding-bottom: 3.25rem;
+  }
+
+  footer[data-site-footer] {
+    margin-bottom: 3.25rem;
+  }
+}
+
+@media (min-width: 768px) {
+  [data-mobile-frame-nav] {
+    display: none !important;
+  }
+}
+
+@media (min-width: 768px) {
+  body [data-carousel-track] {
+    width: calc(var(--frame-count, 4) * 100vw);
+  }
+}

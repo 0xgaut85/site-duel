@@ -1,31 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { MOBILE_MAX_WIDTH_PX, useIsMobile } from "./useIsMobile";
 
 /**
- * Reactive matchMedia hook for `prefers-reduced-motion: reduce`.
- * SSR-safe: defaults to `false` on the server so the smooth experience
- * mounts first, then re-evaluates on the client.
- *
- * Also returns true on small viewports (<768px) where the horizontal
- * carousel falls back to a vertical stack and no scroll-driven animation
- * is appropriate.
+ * True when scroll-driven / horizontal carousel motion should be disabled:
+ * `prefers-reduced-motion: reduce` or mobile viewport (vertical stack).
  */
 export function useReducedMotion(): boolean {
-  const [reduced, setReduced] = useState(false);
+  const mobile = useIsMobile();
+  const [prefersReduced, setPrefersReduced] = useState(false);
 
   useEffect(() => {
     const motionMQ = window.matchMedia("(prefers-reduced-motion: reduce)");
-    const mobileMQ = window.matchMedia("(max-width: 767px)");
-    const update = () => setReduced(motionMQ.matches || mobileMQ.matches);
+    const update = () => setPrefersReduced(motionMQ.matches);
     update();
     motionMQ.addEventListener("change", update);
-    mobileMQ.addEventListener("change", update);
-    return () => {
-      motionMQ.removeEventListener("change", update);
-      mobileMQ.removeEventListener("change", update);
-    };
+    return () => motionMQ.removeEventListener("change", update);
   }, []);
 
-  return reduced;
+  return prefersReduced || mobile;
 }
+
+export { MOBILE_MAX_WIDTH_PX };

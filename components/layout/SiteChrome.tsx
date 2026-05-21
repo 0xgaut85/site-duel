@@ -18,10 +18,11 @@ export function SiteChrome() {
 
   return (
     <a
+      data-site-chrome=""
       href={X_TWITTER_URL}
       target="_blank"
       rel="noopener noreferrer"
-      className="fixed z-[60] pointer-events-auto font-mono text-[10px] tracking-[0.28em] transition-opacity hover:opacity-70"
+      className="fixed z-[60] pointer-events-auto font-mono text-[10px] tracking-[0.28em] transition-opacity hover:opacity-70 max-md:mix-blend-normal max-md:text-ink"
       style={{
         top: "var(--frame-padding)",
         right: "var(--frame-padding)",

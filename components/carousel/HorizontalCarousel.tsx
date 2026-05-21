@@ -3,11 +3,14 @@
 import {
   useCallback,
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
+  type CSSProperties,
 } from "react";
 import { animate, motion, useMotionValue } from "motion/react";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { useReducedMotion } from "@/hooks/useReducedMotion";
 import {
   CarouselContext,
@@ -18,6 +21,7 @@ import {
 import { useKeyboardNav } from "./useKeyboardNav";
 import { useTouchSwipe } from "./useTouchSwipe";
 import { PageTransition } from "./PageTransition";
+import { MobileFrameNav } from "@/components/layout/MobileFrameNav";
 import { SiteChrome } from "@/components/layout/SiteChrome";
 
 interface FrameEntry extends FrameMeta {
@@ -45,7 +49,9 @@ const WHEEL_IDLE_MS = 180;
 export function HorizontalCarousel({ frames, children }: Props) {
   const activeIndexRef = useRef(0);
   const [activeIndex, setActiveIndex] = useState(0);
+  const isMobile = useIsMobile();
   const reducedMotion = useReducedMotion();
+  const stackVertical = isMobile || reducedMotion;
   const frameCount = frames.length;
 
   const trackX = useMotionValue(0);
@@ -79,10 +85,10 @@ export function HorizontalCarousel({ frames, children }: Props) {
       activeIndexRef.current = target;
       if (!sameIndex) setActiveIndex(target);
 
-      const snapX = -target * viewportWidthRef.current;
+      const snapX = stackVertical ? 0 : -target * viewportWidthRef.current;
 
-      if (reducedMotion) {
-        trackX.set(snapX);
+      if (stackVertical) {
+        trackX.set(0);
         const node = document.querySelector<HTMLElement>(
           `[data-carousel-track] > section[data-frame-index="${target}"]`,
         );
@@ -120,28 +126,67 @@ export function HorizontalCarousel({ frames, children }: Props) {
         });
       }, SLIDE_DELAY_MS);
     },
-    [frameCount, reducedMotion, trackX],
+    [frameCount, stackVertical, trackX],
   );
 
-  // Measure viewport + re-snap on resize.
+  // Never leave a horizontal offset on narrow viewports (CSS stacks the track).
+  useLayoutEffect(() => {
+    const mq = window.matchMedia("(max-width: 767px)");
+    const zeroIfStacked = () => {
+      const vw = window.visualViewport?.width ?? window.innerWidth;
+      if (mq.matches || vw <= 767) trackX.set(0);
+    };
+    zeroIfStacked();
+    mq.addEventListener("change", zeroIfStacked);
+    window.visualViewport?.addEventListener("resize", zeroIfStacked);
+    window.addEventListener("resize", zeroIfStacked);
+    return () => {
+      mq.removeEventListener("change", zeroIfStacked);
+      window.visualViewport?.removeEventListener("resize", zeroIfStacked);
+      window.removeEventListener("resize", zeroIfStacked);
+    };
+  }, [trackX]);
+
+  // Measure viewport + re-snap on resize (desktop carousel only).
   useEffect(() => {
     const measure = () => {
       viewportWidthRef.current = window.innerWidth;
+      const vw = window.visualViewport?.width ?? window.innerWidth;
+      const stacked = window.matchMedia("(max-width: 767px)").matches || vw <= 767;
+      if (stacked) {
+        trackX.set(0);
+        return;
+      }
       trackX.set(-activeIndexRef.current * window.innerWidth);
     };
     measure();
     window.addEventListener("resize", measure);
-    return () => window.removeEventListener("resize", measure);
+    window.visualViewport?.addEventListener("resize", measure);
+    return () => {
+      window.removeEventListener("resize", measure);
+      window.visualViewport?.removeEventListener("resize", measure);
+    };
   }, [trackX]);
 
-  // Wheel / trackpad input.
+  // Flag vertical stack for CSS (footer, overflow guards).
   useEffect(() => {
-    if (reducedMotion) return;
+    if (stackVertical) {
+      document.documentElement.setAttribute("data-carousel-stack", "");
+    } else {
+      document.documentElement.removeAttribute("data-carousel-stack");
+    }
+    return () => document.documentElement.removeAttribute("data-carousel-stack");
+  }, [stackVertical]);
+
+  // Wheel / trackpad input (desktop only — never block native scroll on phones).
+  useEffect(() => {
+    if (stackVertical) return;
 
     let acc = 0;
     let lastTs = 0;
 
     const onWheel = (e: WheelEvent) => {
+      if (window.matchMedia("(max-width: 767px)").matches) return;
       e.preventDefault();
       const now = performance.now();
       if (now < cooldownUntilRef.current) return;
@@ -170,11 +215,11 @@ export function HorizontalCarousel({ frames, children }: Props) {
 
     window.addEventListener("wheel", onWheel, { passive: false });
     return () => window.removeEventListener("wheel", onWheel);
-  }, [goTo, reducedMotion]);
+  }, [goTo, stackVertical]);
 
-  // Mobile / reduced-motion: IntersectionObserver tracks active section.
+  // Vertical stack: IntersectionObserver tracks active section for hash / chrome.
   useEffect(() => {
-    if (!reducedMotion) return;
+    if (!stackVertical) return;
     const sections = Array.from(
       document.querySelectorAll<HTMLElement>(
         "[data-carousel-track] > section[data-frame-index]",
@@ -198,7 +243,7 @@ export function HorizontalCarousel({ frames, children }: Props) {
     );
     sections.forEach((s) => io.observe(s));
     return () => io.disconnect();
-  }, [reducedMotion]);
+  }, [stackVertical]);
 
   // URL hash sync.
   useEffect(() => {
@@ -215,9 +260,22 @@ export function HorizontalCarousel({ frames, children }: Props) {
     if (!window.location.hash) return;
     const id = window.location.hash.slice(1);
     const idx = frames.findIndex((f) => f.id === id);
-    if (idx >= 0) {
-      activeIndexRef.current = idx;
-      setActiveIndex(idx);
+    if (idx < 0) return;
+
+    activeIndexRef.current = idx;
+    setActiveIndex(idx);
+
+    const stacked = window.matchMedia("(max-width: 767px)").matches;
+    if (stacked) {
+      trackX.set(0);
+      requestAnimationFrame(() => {
+        document
+          .querySelector<HTMLElement>(
+            `[data-carousel-track] > section[data-frame-index="${idx}"]`,
+          )
+          ?.scrollIntoView({ block: "start" });
+      });
+    } else {
       trackX.set(-idx * (window.innerWidth || 1));
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -238,24 +296,29 @@ export function HorizontalCarousel({ frames, children }: Props) {
   return (
     <CarouselContext.Provider value={value}>
       <SiteChrome />
+      <MobileFrameNav />
       <CarouselInputs />
       {children}
       <main
         data-carousel-proxy=""
-        className="relative w-full h-screen overflow-hidden"
-        aria-label="Duel Agents, horizontal carousel"
+        className="relative w-full h-screen overflow-hidden max-md:h-auto max-md:overflow-visible max-md:overflow-x-clip"
+        style={{ "--frame-count": frameCount } as CSSProperties}
+        aria-label={
+          stackVertical
+            ? "Duel Agents, vertical sections"
+            : "Duel Agents, horizontal carousel"
+        }
       >
         <div
           data-carousel-viewport=""
-          className="fixed inset-0 overflow-hidden z-10"
+          className="fixed inset-0 z-10 overflow-hidden max-md:relative max-md:inset-auto max-md:h-auto max-md:w-full max-md:overflow-visible"
         >
           <motion.div
             data-carousel-track=""
-            className="flex h-screen"
+            className="flex h-screen max-md:h-auto max-md:w-full max-md:flex-col"
             style={{
-              width: `${frameCount * 100}vw`,
-              x: trackX,
-              willChange: "transform",
+              x: stackVertical ? 0 : trackX,
+              willChange: stackVertical ? undefined : "transform",
             }}
           >
             {frames.map((f, i) => (
@@ -264,20 +327,18 @@ export function HorizontalCarousel({ frames, children }: Props) {
                 id={f.id}
                 data-frame-index={i}
                 aria-label={`Frame ${i + 1} of ${frameCount}: ${f.title}`}
-                className="relative shrink-0"
-                style={{ width: "100vw", height: "100vh" }}
+                className="relative shrink-0 w-full max-md:w-full max-md:min-h-[100dvh] max-md:h-auto md:w-[100vw] md:h-screen md:min-h-0"
               >
                 {f.element}
               </section>
             ))}
           </motion.div>
-
         </div>
       </main>
 
-      {/* Depixelize page-transition overlay. Sits above everything; plays
-          on every activeIndex change. */}
-      <PageTransition trigger={activeIndex} duration={TRANSITION_MS} />
+      {!stackVertical && (
+        <PageTransition trigger={activeIndex} duration={TRANSITION_MS} />
+      )}
 
       <div
         aria-live="polite"

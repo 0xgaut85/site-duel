@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect } from "react";
+import { useIsMobile } from "@/hooks/useIsMobile";
 import { useCarousel } from "./CarouselContext";
 
 /**
@@ -9,8 +10,11 @@ import { useCarousel } from "./CarouselContext";
  */
 export function useTouchSwipe(threshold = 60): void {
   const { activeIndex, goTo, nestedHandlersRef } = useCarousel();
+  const isMobile = useIsMobile();
 
   useEffect(() => {
+    if (isMobile) return;
+
     let startX = 0;
     let startY = 0;
     let started = false;
@@ -43,5 +47,5 @@ export function useTouchSwipe(threshold = 60): void {
       window.removeEventListener("touchstart", onStart);
       window.removeEventListener("touchend", onEnd);
     };
-  }, [activeIndex, goTo, threshold, nestedHandlersRef]);
+  }, [activeIndex, goTo, threshold, nestedHandlersRef, isMobile]);
 }

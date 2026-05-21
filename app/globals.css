@@ -1,5 +1,6 @@
 @import "tailwindcss";
 @import "../styles/tokens.css";
+@import "../styles/mobile.css";
 
 /* ---------- Theme bindings: expose tokens to Tailwind v4 utilities -------- */
 @theme inline {
@@ -30,7 +31,6 @@ body {
   background: var(--paper);
   color: var(--ink);
   font-family: var(--body-font);
-  /* Inter stylistic sets: cv11 (single-storey a), cv05 (curl-less l). */
   font-feature-settings: "cv11", "cv05", "kern", "liga", "calt";
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
@@ -70,33 +70,10 @@ body::-webkit-scrollbar {
   color: var(--paper);
 }
 
-/* ---------- Mobile fallback ---------------------------------------------- */
-/*
- * Below `md` (768px) the horizontal carousel collapses to a vertical stack.
- * The fixed viewport becomes relative, the track lays out as a column, and
- * each frame is full-width auto-height.
- */
-@media (max-width: 767px) {
-  body [data-carousel-viewport] {
-    position: relative !important;
-    inset: auto !important;
-    overflow: visible !important;
-    height: auto !important;
-  }
-  body [data-carousel-track] {
-    flex-direction: column !important;
-    width: 100vw !important;
-    transform: none !important;
-    height: auto !important;
-  }
-  body [data-carousel-track] > section {
-    width: 100vw !important;
-    height: auto !important;
-    min-height: 100vh !important;
-  }
-  body [data-carousel-proxy] {
-    height: auto !important;
-  }
+/* JS flag when viewport is stacked (see HorizontalCarousel) */
+html[data-carousel-stack] footer[data-site-footer] {
+  position: relative !important;
+  inset: auto !important;
 }
 
 /* ---------- Reduced motion ----------------------------------------------- */

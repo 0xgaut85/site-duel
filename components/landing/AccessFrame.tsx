@@ -28,7 +28,10 @@ export function AccessFrame() {
   const startIndex = frames.findIndex((f) => f.id === "01-landing");
 
   return (
-    <div className="relative h-full w-full overflow-hidden text-paper">
+    <div
+      data-access-frame=""
+      className="relative h-full w-full min-h-[100dvh] overflow-hidden text-paper max-md:overflow-visible"
+    >
       {/* Background image — full bleed, behind the scrim. */}
       <div
         aria-hidden
@@ -50,6 +53,7 @@ export function AccessFrame() {
 
       {/* Top rail — eyebrow (left) and back-link (right). Pinned. */}
       <div
+        data-access-rail=""
         className="absolute left-0 right-0 z-10 flex items-start justify-between"
         style={{
           top: "var(--frame-padding)",
@@ -82,12 +86,15 @@ export function AccessFrame() {
       </div>
 
       {/* Content column — left-anchored, vertically centred. */}
-      <div className="relative z-10 h-full w-full flex items-center">
+      <div
+        data-access-content=""
+        className="relative z-10 h-full w-full flex items-center max-md:items-start max-md:py-[calc(var(--frame-padding)*2+4rem)]"
+      >
         <div
           className="w-full flex flex-col gap-8 max-w-[42rem]"
           style={{
             paddingLeft: "var(--frame-padding)",
-            paddingRight: "1.5rem",
+            paddingRight: "var(--frame-padding)",
           }}
         >
           <div className="flex flex-col gap-5">
