@@ -5,7 +5,7 @@
  * profile menus, and `useSession()` from any client component that
  * needs to know who the current user is. Imports of `auth-client` are
  * client-safe; never import from `@/lib/auth` in a "use client" file
- * (it pulls Drizzle / SMTP into the bundle).
+ * (it pulls Drizzle / Resend into the bundle).
  */
 
 import { createAuthClient } from "better-auth/react";

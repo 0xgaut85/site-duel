@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { addToWaitlist } from "@/lib/waitlist/store";
 import { getRateLimiter } from "@/lib/waitlist/ratelimit";
-import { sendWaitlistEmails } from "@/lib/waitlist/email";
+import { sendWaitlistEmails } from "@/lib/waitlist/resend";
 
 export const runtime = "nodejs";
 

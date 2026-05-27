@@ -22,7 +22,7 @@
  * Then OUT of the transaction:
  *
  *   7) Call `auth.api.signInMagicLink` to send the standard magic-link
- *      email via SMTP.
+ *      email via Resend.
  *
  * The magic-link `sendMagicLink` gate in `lib/auth.ts` checks the users
  * table; because step 1 created the row, the email goes through. Any
