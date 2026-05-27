@@ -74,7 +74,7 @@ Without `DATABASE_URL` the marketing site still runs, but `/login`,
 | `NEXT_PUBLIC_GITHUB_URL`     | Repo link on page 4 (Use Duel Agents frame)             |
 | `DATABASE_URL`               | Railway Postgres connection string                      |
 | `BETTER_AUTH_SECRET`         | 32-byte random hex (`openssl rand -hex 32`)             |
-| `BETTER_AUTH_URL`            | Site origin (e.g. `http://localhost:3000`)              |
+| `BETTER_AUTH_URL`            | Site origin (`http://localhost:3000` dev, `https://duelagents.com` prod) |
 | `DUEL_ADMIN_EMAILS`          | Comma-separated emails granted `/admin` access          |
 | `ANTHROPIC_API_KEY`          | Server-side managed key (real backend, never to client) |
 | `OPENAI_API_KEY`             | Server-side managed key                                 |
@@ -124,9 +124,24 @@ Set `DUEL_ADMIN_EMAILS` to that address so the admin nav appears.
 
 Test cards: `4242 4242 4242 4242` succeeds; `4000 0000 0000 0002` declines with Stripe's exact error message in the billing UI.
 
-## Go live (Railway / Vercel)
+## Go live (Railway)
 
-Ensure `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and `RESEND_*` are configured, then deploy.
+Set these on the **web service** that runs `next build` (not just at runtime):
+
+| Variable | Production value |
+| -------- | ---------------- |
+| `DATABASE_URL` | From Railway Postgres plugin or external DB |
+| `BETTER_AUTH_SECRET` | Random 32+ byte hex (`openssl rand -hex 32`) |
+| `BETTER_AUTH_URL` | **`https://duelagents.com`** (must match your live origin) |
+| `RESEND_API_KEY` | Resend API key |
+| `RESEND_FROM_EMAIL` | Verified sender in Resend |
+| `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Optional but recommended for quotas |
+
+**Remove** `NEXT_PUBLIC_PRODUCT_LIVE` if it is still set — the release flag was removed; dashboard and auth are always live.
+
+Stripe vars (`STRIPE_*`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`) are only needed when billing checkout is enabled.
+
+After changing env vars, trigger a **new deploy** (rebuild) on Railway so `NEXT_PUBLIC_*` values are picked up at build time.
 
 ## Architecture (one-paragraph version)
 
