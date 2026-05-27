@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { z } from "zod";
 import { addToWaitlist } from "@/lib/waitlist/store";
 import { getRateLimiter } from "@/lib/waitlist/ratelimit";
-import { sendWaitlistEmails } from "@/lib/waitlist/resend";
+import { sendWaitlistEmails } from "@/lib/waitlist/email";
 
 export const runtime = "nodejs";
 
@@ -62,7 +62,7 @@ export async function POST(req: NextRequest) {
     if (added) {
       // Fire-and-forget; we already have the row, but await for serverless safety.
       await sendWaitlistEmails(email, total).catch((err) => {
-        console.error("[waitlist] resend send failed:", err);
+        console.error("[waitlist] email send failed:", err);
       });
     }
 

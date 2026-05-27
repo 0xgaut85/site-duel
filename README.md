@@ -12,7 +12,7 @@ and picks the cheapest one whose answer still wins.
 - Drizzle ORM + Railway Postgres      product schema (users, accounts, calls, …)
 - Stripe                              subscription billing (Payment Element)
 - Upstash Redis                       quota counters + rate limits + waitlist persistence
-- Resend                              transactional email
+- nodemailer (SMTP)                  transactional email
 - GSAP + Lenis                        marketing site horizontal carousel
 ```
 
@@ -36,7 +36,7 @@ live. Unauthenticated visits to `/dashboard` redirect to `/login`. Configure
 
 ## Phase 1 status (current)
 
-- Magic-link auth via Better-Auth + Resend
+- Magic-link auth via Better-Auth + SMTP
 - Public signup — any email at `/login` provisions an account; subscribe on billing
 - Stripe billing at `/dashboard/billing` (Payment Element: card + USDC stablecoin)
 - Drizzle schema covering users, accounts, account_members, duel_api_keys,
@@ -78,9 +78,12 @@ Without `DATABASE_URL` the marketing site still runs, but `/login`,
 | `DUEL_ADMIN_EMAILS`          | Comma-separated emails granted `/admin` access          |
 | `ANTHROPIC_API_KEY`          | Server-side managed key (real backend, never to client) |
 | `OPENAI_API_KEY`             | Server-side managed key                                 |
-| `RESEND_API_KEY`             | Transactional email sender (sign-in, invites)           |
-| `RESEND_FROM_EMAIL`          | `Duel Agents <hello@duel-agents.com>`                   |
-| `RESEND_NOTIFY_EMAIL`        | Internal address for new-signup pings                   |
+| `SMTP_HOST`                  | SMTP server hostname (sign-in magic links, waitlist)    |
+| `SMTP_PORT`                  | SMTP port (default `587`)                               |
+| `SMTP_USER`                  | SMTP username                                           |
+| `SMTP_PASS`                  | SMTP password or API key                                |
+| `SMTP_FROM`                  | `Duel Agents <hello@duelagents.com>`                    |
+| `SMTP_NOTIFY_EMAIL`          | Optional internal address for waitlist signup pings     |
 | `UPSTASH_REDIS_REST_URL`     | Quota counters + rate limits                            |
 | `UPSTASH_REDIS_REST_TOKEN`   | Upstash REST token                                      |
 | `STRIPE_SECRET_KEY`          | Stripe secret key (server-side)                         |
@@ -133,8 +136,8 @@ Set these on the **web service** that runs `next build` (not just at runtime):
 | `DATABASE_URL` | From Railway Postgres plugin or external DB |
 | `BETTER_AUTH_SECRET` | Random 32+ byte hex (`openssl rand -hex 32`) |
 | `BETTER_AUTH_URL` | **`https://duelagents.com`** (must match your live origin) |
-| `RESEND_API_KEY` | Resend API key |
-| `RESEND_FROM_EMAIL` | Verified sender in Resend |
+| `SMTP_HOST` / `SMTP_USER` / `SMTP_PASS` | SMTP credentials for magic-link email |
+| `SMTP_FROM` | From address (e.g. `Duel Agents <hello@duelagents.com>`) |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Optional but recommended for quotas |
 
 **Remove** `NEXT_PUBLIC_PRODUCT_LIVE` if it is still set — the release flag was removed; dashboard and auth are always live.

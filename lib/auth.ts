@@ -1,7 +1,7 @@
 /**
  * Better-Auth configuration for Duel Agents.
  *
- * Auth model: passwordless magic links sent via Resend. Public signup:
+ * Auth model: passwordless magic links sent via SMTP. Public signup:
  * requesting a magic link for a new email provisions user + account +
  * subscription row, then sends the link. Unknown vs known emails still
  * get the same generic UI response (no enumeration).
@@ -15,14 +15,13 @@ import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { magicLink } from "better-auth/plugins";
 import { eq } from "drizzle-orm";
-import { Resend } from "resend";
 import { getDb, schema } from "@/db/client";
+import { sendEmail } from "@/lib/email/send";
+import {
+  magicLinkEmailHtml,
+  magicLinkEmailText,
+} from "@/lib/email/templates/magic-link";
 import { provisionPublicUser } from "@/lib/provision";
-
-const resendApiKey = process.env.RESEND_API_KEY;
-const resendFrom =
-  process.env.RESEND_FROM_EMAIL ?? "Duel Agents <hello@duel-agents.com>";
-const resend = resendApiKey ? new Resend(resendApiKey) : null;
 
 const baseURL = process.env.BETTER_AUTH_URL ?? "http://localhost:3000";
 
@@ -76,17 +75,7 @@ function createAuth() {
             await provisionPublicUser(normalised);
           }
 
-          if (!resend) {
-            // eslint-disable-next-line no-console
-            console.warn(
-              "[auth] RESEND_API_KEY missing — magic-link email skipped. Link was:",
-              url,
-            );
-            return;
-          }
-
-          await resend.emails.send({
-            from: resendFrom,
+          await sendEmail({
             to: normalised,
             subject: "Your Duel Agents sign-in link",
             html: magicLinkEmailHtml(url),
@@ -128,35 +117,3 @@ export const auth: AuthInstance = new Proxy({} as AuthInstance, {
 });
 
 export type Session = AuthInstance["$Infer"]["Session"];
-
-/* ─────────────────────────────────────────────────────────── email templates
- *
- * Kept inline because they're tiny. Once we add more transactional
- * templates (invite, low-quota, plan-changed) we should extract them
- * into `lib/email/` with shared layout fragments.
- */
-
-function magicLinkEmailHtml(url: string): string {
-  return `<!doctype html>
-<html lang="en">
-  <body style="margin:0;padding:40px 20px;background:#0e0e0c;color:#d6d5d0;font-family:'Inter',-apple-system,Segoe UI,Helvetica,Arial,sans-serif;">
-    <div style="max-width:520px;margin:0 auto;padding:32px;background:#171715;border:1px solid rgba(255,255,255,0.06);">
-      <p style="font-family:'Geist Mono',ui-monospace,monospace;font-size:11px;letter-spacing:0.28em;color:#8a8a86;margin:0 0 24px;">/ DUEL AGENTS · SIGN IN</p>
-      <h1 style="font-size:24px;line-height:1.2;font-weight:500;letter-spacing:-0.025em;margin:0 0 16px;color:#f3f2ed;">Your sign-in link.</h1>
-      <p style="margin:0 0 24px;line-height:1.55;color:#c2c1bc;">Click the button below to sign in. The link is valid for 15 minutes and can only be used once.</p>
-      <a href="${url}" style="display:inline-block;padding:14px 22px;background:#c84a1a;color:#ffffff;text-decoration:none;font-family:'Geist Mono',ui-monospace,monospace;font-size:12px;letter-spacing:0.18em;text-transform:uppercase;">Sign in to Duel Agents →</a>
-      <p style="margin:28px 0 0;font-size:12px;color:#8a8a86;line-height:1.55;">If you didn't request this email, you can ignore it.</p>
-    </div>
-  </body>
-</html>`;
-}
-
-function magicLinkEmailText(url: string): string {
-  return `Your sign-in link for Duel Agents.
-
-Open this link in your browser to sign in. Valid for 15 minutes, single use.
-
-${url}
-
-If you didn't request this email, you can ignore it.`;
-}
