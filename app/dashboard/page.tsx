@@ -17,6 +17,7 @@
 import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { requireSession } from "@/lib/session";
+import { ensureUserProvisioned } from "@/lib/provision";
 import { db, schema } from "@/db/client";
 
 interface PageProps {
@@ -33,11 +34,20 @@ export default async function DashboardOverviewPage({ searchParams }: PageProps)
   /* Look up the user's primary account so we can render quota etc.
    * The user always has at least one account (the owner row created
    * at invite time). */
-  const [account] = await db
+  let [account] = await db
     .select()
     .from(schema.accounts)
     .where(eq(schema.accounts.ownerId, session.user.id))
     .limit(1);
+
+  if (!account && session.user.email) {
+    await ensureUserProvisioned(session.user.id, session.user.email);
+    [account] = await db
+      .select()
+      .from(schema.accounts)
+      .where(eq(schema.accounts.ownerId, session.user.id))
+      .limit(1);
+  }
 
   const [subscription] = account
     ? await db
@@ -106,7 +116,7 @@ export default async function DashboardOverviewPage({ searchParams }: PageProps)
       </header>
 
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-px mb-12 bg-ink/10 border border-ink/10">
-        <StatCard label="/ TIER" value={tier.toUpperCase()} hint="invite-only beta" />
+        <StatCard label="/ TIER" value={tier.toUpperCase()} hint={tier === "beta" ? "upgrade in billing" : "active plan"} />
         <StatCard
           label="/ CALLS THIS PERIOD"
           value={`${formatNumber(used)} / ${formatNumber(quota)}`}
@@ -115,6 +125,48 @@ export default async function DashboardOverviewPage({ searchParams }: PageProps)
           }
         />
         <StatCard label="/ SAVED SO FAR" value="$0.00" hint="first call coming soon" />
+      </section>
+
+      <section className="border border-ink/10 px-8 py-10 mb-12">
+        <p
+          className="font-mono text-ink-faint mb-4"
+          style={{ fontSize: "10.5px", letterSpacing: "0.28em" }}
+        >
+          / {tier === "beta" ? "SUBSCRIBE" : "BILLING"}
+        </p>
+        <h2
+          className="font-display font-medium text-ink mb-4 max-w-[28ch]"
+          style={{
+            fontSize: "clamp(1.4rem, 2.2vw, 1.85rem)",
+            lineHeight: 1.1,
+            letterSpacing: "-0.022em",
+          }}
+        >
+          {tier === "beta"
+            ? "Pick a plan in billing."
+            : "Manage your subscription."}
+        </h2>
+        <Link
+          href="/dashboard/billing"
+          className="group inline-flex items-center gap-2 font-mono"
+          style={{ fontSize: "11.5px", letterSpacing: "0.22em" }}
+        >
+          <span className="relative whitespace-nowrap text-ink">
+            open billing
+            <span
+              aria-hidden
+              className="absolute left-0 right-0 -bottom-1 transition-all duration-300 group-hover:-bottom-1.5"
+              style={{ background: "var(--rust)", height: 1 }}
+            />
+          </span>
+          <span
+            aria-hidden
+            className="translate-x-0 group-hover:translate-x-1 transition-transform"
+            style={{ color: "var(--rust)" }}
+          >
+            →
+          </span>
+        </Link>
       </section>
 
       <section className="border border-ink/10 px-8 py-10">

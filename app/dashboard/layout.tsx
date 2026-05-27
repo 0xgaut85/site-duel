@@ -82,6 +82,12 @@ function Topbar({ email, isAdmin }: { email: string; isAdmin: boolean }) {
           >
             SETTINGS
           </Link>
+          <Link
+            href="/dashboard/billing"
+            className="text-ink hover:opacity-70 transition-opacity"
+          >
+            BILLING
+          </Link>
           {isAdmin && (
             <Link
               href="/admin"

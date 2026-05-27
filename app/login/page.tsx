@@ -2,10 +2,8 @@
  * Sign-in screen. Single email input → request magic link → "check your
  * inbox" confirmation. No password, no signup tab, no social buttons.
  *
- * Signup is invite-only (closed via `/api/auth/*` + the magic-link
- * sendMagicLink callback in `lib/auth.ts`), so the response message is
- * intentionally generic: we don't want to reveal whether a given email
- * has an account.
+ * Sign-in screen. Email → magic link. New emails are provisioned on first
+ * request (public signup); the confirmation UI stays generic.
  */
 
 import type { Metadata } from "next";
@@ -52,7 +50,8 @@ export default function LoginPage() {
           className="text-ink-soft mb-10 max-w-[30ch]"
           style={{ fontSize: "clamp(0.95rem, 1.1vw, 1.05rem)", lineHeight: 1.55 }}
         >
-          Enter your email and we'll send you a one-time sign-in link.
+          Enter your email. We'll send a one-time sign-in link — new accounts
+          are created automatically.
         </p>
 
         <LoginForm />
@@ -61,12 +60,12 @@ export default function LoginPage() {
           className="font-mono text-ink-faint mt-12"
           style={{ fontSize: "11px", letterSpacing: "0.22em" }}
         >
-          / NO ACCOUNT? &nbsp;
+          / NEW HERE? &nbsp;
           <a
-            href="/access"
+            href="/#04-access"
             className="text-ink hover:opacity-70 transition-opacity"
           >
-            REQUEST ACCESS →
+            USE DUEL AGENTS →
           </a>
         </p>
       </div>

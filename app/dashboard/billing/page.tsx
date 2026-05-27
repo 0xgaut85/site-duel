@@ -1,0 +1,129 @@
+import { eq } from "drizzle-orm";
+import { requireSession } from "@/lib/session";
+import { ensureUserProvisioned } from "@/lib/provision";
+import { PAID_TIERS } from "@/lib/billing/tiers";
+import { isStripeConfigured } from "@/lib/stripe";
+import { db, schema } from "@/db/client";
+import { BillingCheckout } from "./BillingCheckout";
+
+export const dynamic = "force-dynamic";
+
+interface PageProps {
+  searchParams: Promise<{ success?: string }>;
+}
+
+export default async function BillingPage({ searchParams }: PageProps) {
+  const session = await requireSession();
+  const params = await searchParams;
+
+  let [account] = await db
+    .select({ id: schema.accounts.id })
+    .from(schema.accounts)
+    .where(eq(schema.accounts.ownerId, session.user.id))
+    .limit(1);
+
+  if (!account && session.user.email) {
+    const provisioned = await ensureUserProvisioned(
+      session.user.id,
+      session.user.email,
+    );
+    account = { id: provisioned.accountId };
+  }
+
+  const [subscription] = account
+    ? await db
+        .select()
+        .from(schema.subscriptions)
+        .where(eq(schema.subscriptions.accountId, account.id))
+        .limit(1)
+    : [];
+
+  const tier = subscription?.tier ?? "beta";
+  const status = subscription?.status ?? "active";
+
+  return (
+    <>
+      <header className="mb-12">
+        <p
+          className="font-mono text-ink-faint mb-3"
+          style={{ fontSize: "11px", letterSpacing: "0.28em" }}
+        >
+          / BILLING
+        </p>
+        <h1
+          className="font-display font-medium text-ink"
+          style={{
+            fontSize: "clamp(2rem, 3.4vw, 2.8rem)",
+            lineHeight: 1.02,
+            letterSpacing: "-0.025em",
+          }}
+        >
+          Subscription.
+        </h1>
+      </header>
+
+      {params.success === "1" && (
+        <div
+          className="mb-10 border border-ink/10 px-6 py-5"
+          style={{ background: "rgba(200,74,26,0.04)" }}
+        >
+          <p
+            className="font-mono text-rust mb-2"
+            style={{ fontSize: "10.5px", letterSpacing: "0.28em" }}
+          >
+            / PAYMENT SUBMITTED
+          </p>
+          <p
+            className="text-ink-soft max-w-[60ch]"
+            style={{ fontSize: "0.975rem", lineHeight: 1.55 }}
+          >
+            Stripe is confirming your payment. Your tier will update shortly
+            once the webhook syncs.
+          </p>
+        </div>
+      )}
+
+      <section className="grid grid-cols-1 sm:grid-cols-3 gap-px mb-12 bg-ink/10 border border-ink/10">
+        <StatCard label="/ CURRENT TIER" value={tier.toUpperCase()} />
+        <StatCard label="/ STATUS" value={status.toUpperCase()} />
+        <StatCard
+          label="/ CALLS THIS PERIOD"
+          value={`${formatNumber(subscription?.callsUsedThisPeriod ?? 0)} / ${formatNumber(subscription?.monthlyCallQuota ?? 0)}`}
+        />
+      </section>
+
+      <BillingCheckout
+        tiers={PAID_TIERS}
+        currentTier={tier}
+        stripeConfigured={isStripeConfigured()}
+      />
+    </>
+  );
+}
+
+function StatCard({ label, value }: { label: string; value: string }) {
+  return (
+    <div className="bg-paper p-8">
+      <p
+        className="font-mono text-ink-faint mb-4"
+        style={{ fontSize: "10.5px", letterSpacing: "0.28em" }}
+      >
+        {label}
+      </p>
+      <p
+        className="font-display font-medium text-ink"
+        style={{
+          fontSize: "clamp(1.5rem, 2.4vw, 2rem)",
+          lineHeight: 1.05,
+          letterSpacing: "-0.02em",
+        }}
+      >
+        {value}
+      </p>
+    </div>
+  );
+}
+
+function formatNumber(n: number): string {
+  return new Intl.NumberFormat("en-US").format(n);
+}

@@ -1,14 +1,10 @@
 /**
  * Better-Auth configuration for Duel Agents.
  *
- * Auth model: passwordless magic links sent via Resend. Signup is
- * invite-only: a user account is created when an admin-issued invite
- * token is consumed at `/invite/[token]`. After that, the user signs in
- * by entering their email at `/login` — Better-Auth sends a magic link
- * that the user clicks to receive a session. We refuse to send magic
- * links to emails that don't already have a user row, which closes the
- * "request magic link to any email" backdoor that would otherwise
- * bypass the invite gate.
+ * Auth model: passwordless magic links sent via Resend. Public signup:
+ * requesting a magic link for a new email provisions user + account +
+ * beta subscription, then sends the link. Unknown vs known emails still
+ * get the same generic UI response (no enumeration).
  *
  * The Drizzle adapter is wired with our renamed auth tables — the
  * OAuth-style `account` table is called `accounts_auth` to avoid
@@ -18,9 +14,10 @@
 import { betterAuth } from "better-auth";
 import { drizzleAdapter } from "better-auth/adapters/drizzle";
 import { magicLink } from "better-auth/plugins";
-import { Resend } from "resend";
 import { eq } from "drizzle-orm";
+import { Resend } from "resend";
 import { getDb, schema } from "@/db/client";
+import { provisionPublicUser } from "@/lib/provision";
 
 const resendApiKey = process.env.RESEND_API_KEY;
 const resendFrom =
@@ -64,23 +61,19 @@ function createAuth() {
     },
     plugins: [
       magicLink({
-        /* `sendMagicLink` is called by Better-Auth whenever a user
-         * requests sign-in. We intercept here to enforce the invite-only
-         * gate: silently no-op if the email has never been invited.
-         *
-         * Returning without throwing keeps the UI response generic
-         * ("we sent you a link if your email is on file") — preventing
-         * email-enumeration of who is and isn't an invited user. */
+        /* Public signup: provision unknown emails, then send the link.
+         * Generic UI response either way (no enumeration). */
         sendMagicLink: async ({ email, url, token: _token }) => {
+          const normalised = email.toLowerCase();
+          const db = getDb();
           const existing = await db
             .select({ id: schema.users.id })
             .from(schema.users)
-            .where(eq(schema.users.email, email.toLowerCase()))
+            .where(eq(schema.users.email, normalised))
             .limit(1);
 
           if (existing.length === 0) {
-            // Email not invited yet. Silently do nothing.
-            return;
+            await provisionPublicUser(normalised);
           }
 
           if (!resend) {
@@ -94,7 +87,7 @@ function createAuth() {
 
           await resend.emails.send({
             from: resendFrom,
-            to: email,
+            to: normalised,
             subject: "Your Duel Agents sign-in link",
             html: magicLinkEmailHtml(url),
             text: magicLinkEmailText(url),

@@ -1,27 +1,23 @@
 "use client";
 
 import { useCarousel } from "@/components/carousel/CarouselContext";
-import { X_TWITTER_URL } from "@/components/layout/SiteChrome";
+import { LiquidButton } from "@/components/ui/LiquidButton";
 import { WaitlistForm } from "@/components/ui/WaitlistForm";
+import { GITHUB_URL } from "@/lib/site-links";
+import { X_TWITTER_URL } from "@/lib/site-links";
 
 /*
- * 04 · ACCESS — full-bleed dark photograph behind an ink scrim. The
- * frame is laid out as a magazine spread:
+ * 04 · USE DUEL AGENTS — product entry frame.
  *
- *   ┌─ 04 · REQUEST ACCESS ─────────────── ← BACK TO START ─┐
- *   │                                                       │
- *   │   Get in early.                                       │
- *   │   (paragraph)                                         │
- *   │                                                       │
- *   │   [ email field         ]                             │
- *   │   [  REQUEST ACCESS  →  ]   ← liquid-glass pill       │
- *   │   · NO MARKETING · ONE EMAIL WHEN ACCESS OPENS ·       │
- *   │                                                       │
- *   └───────────────────────────────────────────────────────┘
- *
- * Eyebrow + back-link are pinned to the top corners; the content
- * column sits left-anchored and vertically centred between them. No
- * green / rust accents anywhere on this frame.
+ *   ┌─ 04 · USE DUEL AGENTS ─────── ← BACK TO START ─┐
+ *   │                              X / TWITTER        │
+ *   │                              [ DUEL APP → ]     │
+ *   │   Use Duel Agents.                              │
+ *   │   Sign in, pick a plan in billing, or join the    │
+ *   │   waitlist for launch updates.                  │
+ *   │   GITHUB →                                      │
+ *   │   [ waitlist form ]                             │
+ *   └─────────────────────────────────────────────────┘
  */
 export function AccessFrame() {
   const { goTo, frames } = useCarousel();
@@ -32,7 +28,6 @@ export function AccessFrame() {
       data-access-frame=""
       className="relative h-full w-full min-h-[100dvh] overflow-hidden text-paper max-md:overflow-visible"
     >
-      {/* Background image — full bleed, behind the scrim. */}
       <div
         aria-hidden
         className="absolute inset-0 pointer-events-none"
@@ -43,15 +38,12 @@ export function AccessFrame() {
           backgroundRepeat: "no-repeat",
         }}
       />
-      {/* Ink scrim — knocks the photograph back so the type reads,
-          without losing the underlying texture. */}
       <div
         aria-hidden
         className="absolute inset-0 pointer-events-none"
         style={{ background: "var(--ink)", opacity: 0.55 }}
       />
 
-      {/* Top rail — eyebrow (left) and back-link (right). Pinned. */}
       <div
         data-access-rail=""
         className="absolute left-0 right-0 z-10 flex items-start justify-between"
@@ -62,15 +54,15 @@ export function AccessFrame() {
         }}
       >
         <span className="font-mono text-[10px] tracking-[0.3em] text-paper-faint">
-          04 · REQUEST ACCESS
+          04 · USE DUEL AGENTS
         </span>
-        <div className="relative z-50 flex flex-col items-end gap-3 pointer-events-auto">
+        <div className="relative z-50 flex w-[min(100%,11.5rem)] flex-col items-stretch gap-3 pointer-events-auto">
           <button
             type="button"
             onClick={() => {
               if (startIndex >= 0) goTo(startIndex, { force: true });
             }}
-            className="font-mono text-[10px] tracking-[0.3em] text-paper-faint hover:text-paper transition-colors cursor-pointer"
+            className="font-mono text-[10px] tracking-[0.3em] text-paper-faint hover:text-paper transition-colors cursor-pointer text-right"
           >
             ← BACK TO START
           </button>
@@ -78,17 +70,19 @@ export function AccessFrame() {
             href={X_TWITTER_URL}
             target="_blank"
             rel="noopener noreferrer"
-            className="font-mono text-[10px] tracking-[0.28em] text-paper-faint hover:text-paper transition-colors"
+            className="font-mono text-[10px] tracking-[0.28em] text-paper-faint hover:text-paper transition-colors text-right"
           >
             X / TWITTER
           </a>
+          <LiquidButton href="/dashboard" darkBg type="button">
+            DUEL APP
+          </LiquidButton>
         </div>
       </div>
 
-      {/* Content column — left-anchored, vertically centred. */}
       <div
         data-access-content=""
-        className="relative z-10 h-full w-full flex items-center max-md:items-start max-md:py-[calc(var(--frame-padding)*2+4rem)]"
+        className="relative z-10 h-full w-full flex items-center max-md:items-start max-md:py-[calc(var(--frame-padding)*2+6rem)]"
       >
         <div
           className="w-full flex flex-col gap-8 max-w-[42rem]"
@@ -99,20 +93,31 @@ export function AccessFrame() {
         >
           <div className="flex flex-col gap-5">
             <h2 className="font-display text-[clamp(2.6rem,5.5vw,4.5rem)] font-medium leading-[0.98] tracking-[-0.025em] text-paper">
-              Get in early.
+              Use Duel Agents.
             </h2>
             <p className="text-paper-faint text-[clamp(15px,1.15vw,17px)] leading-[1.55] max-w-[38ch]">
-              We&apos;re onboarding a small first wave. Drop your email; we
-              send one message when access opens.
+              Open the dashboard to sign in with a magic link, manage API
+              keys, and subscribe on the billing page. Card and USDC
+              (Polygon, Base, and more) when Stripe stablecoin is enabled.
             </p>
+            <a
+              href={GITHUB_URL}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="font-mono text-[10px] tracking-[0.28em] text-paper-faint hover:text-paper transition-colors w-fit"
+            >
+              GITHUB →
+            </a>
           </div>
 
-          <div className="max-w-[28rem]">
+          <div className="flex flex-col gap-3 max-w-[28rem]">
+            <p className="font-mono text-[10px] tracking-[0.22em] text-paper-faint">
+              OR JOIN THE WAITLIST
+            </p>
             <WaitlistForm darkBg />
           </div>
         </div>
       </div>
-
     </div>
   );
 }

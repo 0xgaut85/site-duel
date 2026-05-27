@@ -8,8 +8,9 @@ and picks the cheapest one whose answer still wins.
 - Next.js 16 (App Router, RSC)        marketing carousel + dashboard + /v1 proxy
 - TypeScript
 - Tailwind CSS v4                     CSS-first @theme tokens
-- Better-Auth                         magic-link auth, invite-only signup
+- Better-Auth                         magic-link auth, public signup
 - Drizzle ORM + Railway Postgres      product schema (users, accounts, calls, …)
+- Stripe                              subscription billing (Payment Element)
 - Upstash Redis                       quota counters + rate limits + waitlist persistence
 - Resend                              transactional email
 - GSAP + Lenis                        marketing site horizontal carousel
@@ -46,11 +47,11 @@ your deploy environment when you're ready to expose the dashboard.
 Foundations are in but invisible until the flag flips:
 
 - Magic-link auth via Better-Auth + Resend
-- Invite-only signup gated by `lib/invites.ts` (no public sign-up route)
+- Public signup — any email at `/login` provisions user + beta subscription
+- Stripe billing at `/dashboard/billing` (Payment Element: card + USDC stablecoin)
 - Drizzle schema covering users, accounts, account_members, duel_api_keys,
-  subscriptions (forward-compatible with MoonPay), payment_provider, calls,
-  invites, waitlist
-- `/dashboard` shell with usage stat cards
+  subscriptions, payment_provider, calls, invites, waitlist
+- `/dashboard` shell with usage stat cards + billing CTA
 - `/dashboard/settings` API key generation, revocation, and integration
   install snippets (Claude Code, Cursor, Codex CLI, Hermes Agent, Venice)
 
@@ -58,7 +59,6 @@ What's NOT in yet (future phases):
 
 - The `/v1/messages` + `/v1/chat/completions` proxy (Phase 2)
 - The display + real routers (Phase 2)
-- MoonPay billing (Phase 3)
 - `/admin` invite/quota UI (Phase 3)
 - Dashboard analytics (Phase 4)
 - `@duel-agents/install` CLI (Phase 5)
@@ -82,6 +82,7 @@ Without `DATABASE_URL` the marketing site still runs, but `/login`,
 | Key                          | Purpose                                                 |
 | ---------------------------- | ------------------------------------------------------- |
 | `NEXT_PUBLIC_PRODUCT_LIVE`   | `"true"` to expose login + dashboard; otherwise hidden  |
+| `NEXT_PUBLIC_GITHUB_URL`     | Repo link on page 4 (Use Duel Agents frame)             |
 | `DATABASE_URL`               | Railway Postgres connection string                      |
 | `BETTER_AUTH_SECRET`         | 32-byte random hex (`openssl rand -hex 32`)             |
 | `BETTER_AUTH_URL`            | Site origin (e.g. `http://localhost:3000`)              |
@@ -93,9 +94,12 @@ Without `DATABASE_URL` the marketing site still runs, but `/login`,
 | `RESEND_NOTIFY_EMAIL`        | Internal address for new-signup pings                   |
 | `UPSTASH_REDIS_REST_URL`     | Quota counters + rate limits                            |
 | `UPSTASH_REDIS_REST_TOKEN`   | Upstash REST token                                      |
-| `MOONPAY_API_KEY`            | (Phase 3) MoonPay Commerce API key                      |
-| `MOONPAY_WEBHOOK_SECRET`     | (Phase 3) Signature secret for webhook verification     |
-| `MOONPAY_API_BASE_URL`       | `https://api.moonpay.com`                               |
+| `STRIPE_SECRET_KEY`          | Stripe secret key (server-side)                         |
+| `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY` | Stripe publishable key (client Payment Element) |
+| `STRIPE_WEBHOOK_SECRET`      | Webhook signing secret for `/api/webhooks/stripe`       |
+| `STRIPE_PRICE_INDIE`         | Stripe Price ID for indie tier ($19/mo)                 |
+| `STRIPE_PRICE_PRO`           | Stripe Price ID for pro tier ($49/mo)                   |
+| `STRIPE_PRICE_TEAM`          | Stripe Price ID for team tier ($199/mo)                 |
 
 ## Scripts
 
@@ -110,13 +114,30 @@ npm run db:push      # push schema directly (dev convenience; skips migrations f
 npm run db:studio    # open Drizzle Studio against DATABASE_URL
 ```
 
-## Bootstrapping the first invited user
+## Bootstrapping the first admin
 
-In the v1 invite-only beta there's no public sign-up flow. The first
-account is created by running the `inviteEmail` helper directly.
-Easiest path: `node --import tsx scripts/invite.mts you@yourdomain.com`
-(create the script ad-hoc) or run a one-shot in `npm run db:studio`.
-The `/admin` UI in Phase 3 replaces this manual step.
+Public signup handles normal users at `/login`. To bootstrap an admin
+account (for `/admin` when it ships), invite via the bootstrap script:
+
+```bash
+npx tsx scripts/bootstrap-admin.mts you@yourdomain.com
+```
+
+Set `DUEL_ADMIN_EMAILS` to that address so the admin nav appears.
+
+## Stripe setup (billing)
+
+1. Create three Products/Prices in the [Stripe Dashboard](https://dashboard.stripe.com) matching schema tiers: indie ($19), pro ($49), team ($199).
+2. Copy each Price ID into `STRIPE_PRICE_INDIE`, `STRIPE_PRICE_PRO`, `STRIPE_PRICE_TEAM`.
+3. Enable **Stablecoin payments** (USDC) under Payment methods if you want crypto in the Payment Element.
+4. Add a webhook endpoint pointing at `https://your-domain/api/webhooks/stripe` listening for `customer.subscription.*`, `invoice.paid`, and `invoice.payment_failed`.
+5. Copy the webhook signing secret to `STRIPE_WEBHOOK_SECRET`.
+
+Test cards: `4242 4242 4242 4242` succeeds; `4000 0000 0000 0002` declines with Stripe's exact error message in the billing UI.
+
+## Go live (Railway / Vercel)
+
+Set `NEXT_PUBLIC_PRODUCT_LIVE=true` and rebuild. Ensure `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and `RESEND_*` are configured.
 
 ## Architecture (one-paragraph version)
 

@@ -24,7 +24,7 @@ export default function Page() {
     },
     {
       id: "04-access",
-      title: "Request access",
+      title: "Use Duel Agents",
       element: <AccessFrame />,
     },
   ];
