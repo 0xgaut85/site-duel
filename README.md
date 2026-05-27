@@ -28,23 +28,13 @@ styles/             Design tokens, fonts
 twitter/            Static X post templates
 ```
 
-## Release flag
+## Product routes
 
-The Phase 1 product (login + dashboard + Better-Auth endpoints) is
-gated behind `NEXT_PUBLIC_PRODUCT_LIVE`. While unset or `false`, the
-site behaves exactly like the marketing-only build — `/login`,
-`/dashboard`, and `/api/auth/*` all serve a 404. Flip to `true` in
-your deploy environment when you're ready to expose the dashboard.
+The marketing carousel, `/login`, `/dashboard`, and `/api/auth/*` are always
+live. Unauthenticated visits to `/dashboard` redirect to `/login`. Configure
+`DATABASE_URL`, auth, and Stripe env vars for full functionality.
 
-| Value                  | Effect                                              |
-| ---------------------- | --------------------------------------------------- |
-| (unset)                | Marketing-only mode. Dashboard surfaces 404.        |
-| `false`                | Same — explicit off.                                |
-| `true`                 | Login + dashboard + auth API are live.              |
-
-## Phase 1 status (current — gated by release flag)
-
-Foundations are in but invisible until the flag flips:
+## Phase 1 status (current)
 
 - Magic-link auth via Better-Auth + Resend
 - Public signup — any email at `/login` provisions an account; subscribe on billing
@@ -81,7 +71,6 @@ Without `DATABASE_URL` the marketing site still runs, but `/login`,
 
 | Key                          | Purpose                                                 |
 | ---------------------------- | ------------------------------------------------------- |
-| `NEXT_PUBLIC_PRODUCT_LIVE`   | `"true"` to expose login + dashboard; otherwise hidden  |
 | `NEXT_PUBLIC_GITHUB_URL`     | Repo link on page 4 (Use Duel Agents frame)             |
 | `DATABASE_URL`               | Railway Postgres connection string                      |
 | `BETTER_AUTH_SECRET`         | 32-byte random hex (`openssl rand -hex 32`)             |
@@ -137,7 +126,7 @@ Test cards: `4242 4242 4242 4242` succeeds; `4000 0000 0000 0002` declines with 
 
 ## Go live (Railway / Vercel)
 
-Set `NEXT_PUBLIC_PRODUCT_LIVE=true` and rebuild. Ensure `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and `RESEND_*` are configured.
+Ensure `DATABASE_URL`, `BETTER_AUTH_SECRET`, `BETTER_AUTH_URL`, and `RESEND_*` are configured, then deploy.
 
 ## Architecture (one-paragraph version)
 

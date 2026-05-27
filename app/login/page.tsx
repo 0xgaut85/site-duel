@@ -7,9 +7,7 @@
  */
 
 import type { Metadata } from "next";
-import { notFound } from "next/navigation";
 import { LoginForm } from "./LoginForm";
-import { isProductLive } from "@/lib/release";
 
 export const metadata: Metadata = {
   title: "Sign in · Duel Agents",
@@ -19,11 +17,6 @@ export const metadata: Metadata = {
 export const dynamic = "force-dynamic";
 
 export default function LoginPage() {
-  // Gated by the release flag — invisible until the product launches.
-  if (!isProductLive()) {
-    notFound();
-  }
-
   return (
     <main
       className="min-h-screen flex items-center justify-center bg-paper text-ink px-6 py-12"
@@ -51,7 +44,7 @@ export default function LoginPage() {
           style={{ fontSize: "clamp(0.95rem, 1.1vw, 1.05rem)", lineHeight: 1.55 }}
         >
           Enter your email for a one-time sign-in link. New accounts are
-          created automatically — subscribe on billing after you sign in.
+          created automatically. Paid plans and checkout open at public launch.
         </p>
 
         <LoginForm />

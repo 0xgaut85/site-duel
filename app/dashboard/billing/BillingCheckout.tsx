@@ -98,7 +98,7 @@ export function BillingCheckout({
       >
         {isPaidSubscription(currentTier)
           ? "Change plan or update your payment method by selecting a tier below."
-          : "Choose indie, pro, or team below. Card and USDC stablecoin accepted."}
+          : "Launch pricing below. Checkout opens at public launch (card and USDC via Stripe)."}
       </p>
 
       {apiError && (

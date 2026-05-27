@@ -155,14 +155,15 @@ export default async function DashboardOverviewPage({ searchParams }: PageProps)
               letterSpacing: "-0.022em",
             }}
           >
-            Choose a plan to start routing.
+            Choose a plan at launch.
           </h2>
           <p
             className="text-ink-soft max-w-[58ch] mb-8"
             style={{ fontSize: "1rem", lineHeight: 1.55 }}
           >
-            Indie, Pro, and Team plans include monthly call quotas. Pay with
-            card or USDC stablecoin on the billing page.
+            Indie ($19/mo), Pro ($49/mo), and Team ($199/mo). Card and USDC
+            checkout through Stripe opens when billing goes live. See pricing
+            on the billing page.
           </p>
           <Link
             href="/dashboard/billing"

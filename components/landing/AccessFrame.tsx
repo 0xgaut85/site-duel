@@ -12,7 +12,7 @@ import { GITHUB_URL, X_TWITTER_URL } from "@/lib/site-links";
  *   │                              GITHUB          │
  *   │                              [ DUEL APP ]    │
  *   │   Use Duel Agents.                           │
- *   │   Sign in, manage keys, subscribe in billing.│
+ *   │   Sign in, keys now; paid plans at launch.    │
  *   └──────────────────────────────────────────────┘
  */
 export function AccessFrame() {
@@ -100,9 +100,9 @@ export function AccessFrame() {
               Use Duel Agents.
             </h2>
             <p className="text-paper-faint text-[clamp(15px,1.15vw,17px)] leading-[1.55] max-w-[38ch]">
-            Sign in with a magic link, pick indie, pro, or team on billing,
-            and generate API keys in settings. Card and USDC when stablecoin
-            is enabled in Stripe.
+            Sign in with a magic link and generate API keys in settings today.
+            Paid plans at launch: Indie $19, Pro $49, Team $199 per month.
+            Checkout by card or USDC through Stripe opens when we go live.
             </p>
           </div>
 

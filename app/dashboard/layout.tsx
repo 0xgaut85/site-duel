@@ -8,9 +8,7 @@
  */
 
 import Link from "next/link";
-import { notFound } from "next/navigation";
 import { requireSession, isAdminEmail } from "@/lib/session";
-import { isProductLive } from "@/lib/release";
 import { SignOutButton } from "./SignOutButton";
 
 export default async function DashboardLayout({
@@ -18,14 +16,6 @@ export default async function DashboardLayout({
 }: {
   children: React.ReactNode;
 }) {
-  /* Hide the dashboard entirely until the release flag is ON. The
-   * auth check happens AFTER the flag check so unauthenticated
-   * visitors get a 404 instead of being redirected to a /login that
-   * also 404s — cleanest UX while the product is dark. */
-  if (!isProductLive()) {
-    notFound();
-  }
-
   const session = await requireSession();
   const isAdmin = isAdminEmail(session.user.email);
 

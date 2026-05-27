@@ -3,7 +3,6 @@ import { z } from "zod";
 import { eq } from "drizzle-orm";
 import { headers } from "next/headers";
 import { auth } from "@/lib/auth";
-import { blockIfNotLive } from "@/lib/release";
 import { getStripe, isStripeConfigured } from "@/lib/stripe";
 import { getAccountBillingContext } from "@/lib/billing/account";
 import { getStripePriceId, type PaidTier } from "@/lib/billing/tiers";
@@ -16,9 +15,6 @@ const Body = z.object({
 });
 
 export async function POST(req: Request) {
-  const blocked = blockIfNotLive();
-  if (blocked) return blocked;
-
   if (!isStripeConfigured()) {
     return NextResponse.json(
       { ok: false, message: "Billing is not configured on this server." },
