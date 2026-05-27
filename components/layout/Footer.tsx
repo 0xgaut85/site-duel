@@ -271,7 +271,7 @@ function DocModal({ kind, onClose }: DocModalProps) {
               letterSpacing: "0.22em",
             }}
           >
-            QUESTIONS? <a href="mailto:hello@duel-agents.com" className="text-ink hover:text-ink-soft underline-offset-4 hover:underline">HELLO@DUEL-AGENTS.COM</a>
+            QUESTIONS? <a href="mailto:hello@duelagents.com" className="text-ink hover:text-ink-soft underline-offset-4 hover:underline">HELLO@DUELAGENTS.COM</a>
           </p>
         </div>
       </motion.div>
@@ -343,7 +343,7 @@ const PRIVACY = {
     {
       heading: "Contact",
       body: [
-        "If you have any questions or requests regarding this Privacy Policy or our handling of your personal information, please contact us at hello@duel-agents.com.",
+        "If you have any questions or requests regarding this Privacy Policy or our handling of your personal information, please contact us at hello@duelagents.com.",
       ],
     },
   ],
@@ -404,7 +404,7 @@ const LEGAL = {
     {
       heading: "Contact",
       body: [
-        "For any questions regarding these Terms, please contact us at hello@duel-agents.com.",
+        "For any questions regarding these Terms, please contact us at hello@duelagents.com.",
       ],
     },
   ],

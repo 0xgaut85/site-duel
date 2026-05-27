@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   title: "Duel Agents",
   description:
     "A framework for your IDE that runs concurrent AI agents on the best model per task, and splits work into sub-agents when it pays off. Cheaper, smarter, faster.",
-  metadataBase: new URL("https://duel-agents.com"),
+  metadataBase: new URL("https://duelagents.com"),
   openGraph: {
     title: "Duel Agents",
     description:

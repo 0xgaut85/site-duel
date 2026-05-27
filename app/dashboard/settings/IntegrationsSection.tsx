@@ -14,7 +14,7 @@ import { useState } from "react";
 
 const PROXY_URL =
   (typeof process !== "undefined" && process.env.NEXT_PUBLIC_PROXY_URL) ||
-  "https://api.duel-agents.com/v1";
+  "https://duelagents.com/v1";
 
 interface Integration {
   id: string;

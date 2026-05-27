@@ -46,11 +46,12 @@ live. Unauthenticated visits to `/dashboard` redirect to `/login`. Configure
 - `/dashboard` shell with usage stat cards + billing CTA
 - `/dashboard/settings` API key generation, revocation, and integration
   install snippets (Claude Code, Cursor, Codex CLI, Hermes Agent, Venice)
+- `/v1` proxy API — OpenAI `/v1/chat/completions` and Anthropic `/v1/messages`
+  with Duel API key auth, subscription quota, and call logging
 
 What's NOT in yet (future phases):
 
-- The `/v1/messages` + `/v1/chat/completions` proxy (Phase 2)
-- The display + real routers (Phase 2)
+- Full display + real model routers (Phase 2b — `duel-auto` currently maps to a single default model per protocol)
 - `/admin` invite/quota UI (Phase 3)
 - Dashboard analytics (Phase 4)
 - `@duel-agents/install` CLI (Phase 5)
