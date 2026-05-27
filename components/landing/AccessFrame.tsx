@@ -2,14 +2,13 @@
 
 import { useCarousel } from "@/components/carousel/CarouselContext";
 import { LiquidButton } from "@/components/ui/LiquidButton";
-import { GITHUB_URL, X_TWITTER_URL } from "@/lib/site-links";
+import { X_TWITTER_URL } from "@/lib/site-links";
 
 /*
  * 04 · USE DUEL AGENTS — live product entry frame.
  *
  *   ┌─ 04 · USE DUEL AGENTS ─────── BACK TO START ─┐
  *   │                              X / TWITTER     │
- *   │                              GITHUB          │
  *   │                              [ DUEL APP ]    │
  *   │   Use Duel Agents.                           │
  *   │   Sign in, keys now; paid plans at launch.    │
@@ -69,14 +68,6 @@ export function AccessFrame() {
             className="font-mono text-[10px] tracking-[0.28em] text-paper-faint hover:text-paper transition-colors text-right"
           >
             X / TWITTER
-          </a>
-          <a
-            href={GITHUB_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-mono text-[10px] tracking-[0.28em] text-paper-faint hover:text-paper transition-colors text-right"
-          >
-            GITHUB
           </a>
           <LiquidButton href="/dashboard" darkBg>
             DUEL APP

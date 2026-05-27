@@ -71,7 +71,6 @@ Without `DATABASE_URL` the marketing site still runs, but `/login`,
 
 | Key                          | Purpose                                                 |
 | ---------------------------- | ------------------------------------------------------- |
-| `NEXT_PUBLIC_GITHUB_URL`     | Repo link on page 4 (Use Duel Agents frame)             |
 | `DATABASE_URL`               | Railway Postgres connection string                      |
 | `BETTER_AUTH_SECRET`         | 32-byte random hex (`openssl rand -hex 32`)             |
 | `BETTER_AUTH_URL`            | Site origin (`http://localhost:3000` dev, `https://duelagents.com` prod) |
