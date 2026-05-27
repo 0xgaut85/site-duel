@@ -1,23 +1,16 @@
 /**
- * /dashboard — overview / empty state for the invite-only beta.
- *
- * Phase 1 ships the shell only. Phase 4 fills this page with the live
- * savings counter, recent calls table, model distribution donut, and
- * usage meter; this empty state is the placeholder until then.
- *
- * What ships now:
- *   - Welcome banner (special-cased for the post-invite first-load case
- *     via the `?welcome=1` query param).
- *   - Three placeholder stat cards so the page isn't bare during the
- *     period before any /v1 calls have happened.
- *   - A clear "next step" pointing at the install CLI snippets on the
- *     settings page.
+ * /dashboard — signed-in home: plan status, usage, and setup steps.
  */
 
 import Link from "next/link";
 import { eq } from "drizzle-orm";
 import { requireSession } from "@/lib/session";
 import { ensureUserProvisioned } from "@/lib/provision";
+import {
+  isPaidSubscription,
+  tierDisplayHint,
+  tierDisplayName,
+} from "@/lib/billing/tiers";
 import { db, schema } from "@/db/client";
 
 interface PageProps {
@@ -31,9 +24,6 @@ export default async function DashboardOverviewPage({ searchParams }: PageProps)
   const params = await searchParams;
   const isFirstVisit = params.welcome === "1";
 
-  /* Look up the user's primary account so we can render quota etc.
-   * The user always has at least one account (the owner row created
-   * at invite time). */
   let [account] = await db
     .select()
     .from(schema.accounts)
@@ -57,9 +47,10 @@ export default async function DashboardOverviewPage({ searchParams }: PageProps)
         .limit(1)
     : [];
 
+  const tier = subscription?.tier ?? "beta";
+  const subscribed = isPaidSubscription(tier);
   const quota = subscription?.monthlyCallQuota ?? 0;
   const used = subscription?.callsUsedThisPeriod ?? 0;
-  const tier = subscription?.tier ?? "beta";
 
   return (
     <>
@@ -79,18 +70,27 @@ export default async function DashboardOverviewPage({ searchParams }: PageProps)
               className="font-mono text-rust mb-2"
               style={{ fontSize: "10.5px", letterSpacing: "0.28em" }}
             >
-              WELCOME TO THE BETA
+              YOU&apos;RE SIGNED IN
             </p>
             <p
               className="text-ink-soft max-w-[60ch]"
               style={{ fontSize: "0.975rem", lineHeight: 1.55 }}
             >
-              You're in. Generate your first Duel API key on the{" "}
-              <Link href="/dashboard/settings" className="text-ink underline underline-offset-4 hover:opacity-70">
+              Pick a plan on{" "}
+              <Link
+                href="/dashboard/billing"
+                className="text-ink underline underline-offset-4 hover:opacity-70"
+              >
+                Billing
+              </Link>
+              , generate an API key in{" "}
+              <Link
+                href="/dashboard/settings"
+                className="text-ink underline underline-offset-4 hover:opacity-70"
+              >
                 Settings
-              </Link>{" "}
-              page, then point your editor at us with one of the install
-              commands. Every routed prompt will show up in this overview.
+              </Link>
+              , then point your editor at Duel.
             </p>
           </div>
         </div>
@@ -116,58 +116,70 @@ export default async function DashboardOverviewPage({ searchParams }: PageProps)
       </header>
 
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-px mb-12 bg-ink/10 border border-ink/10">
-        <StatCard label="/ TIER" value={tier.toUpperCase()} hint={tier === "beta" ? "upgrade in billing" : "active plan"} />
+        <StatCard
+          label="/ PLAN"
+          value={tierDisplayName(tier)}
+          hint={tierDisplayHint(tier)}
+        />
         <StatCard
           label="/ CALLS THIS PERIOD"
-          value={`${formatNumber(used)} / ${formatNumber(quota)}`}
+          value={
+            subscribed
+              ? `${formatNumber(used)} / ${formatNumber(quota)}`
+              : "—"
+          }
           hint={
-            quota > 0 ? `${Math.round((used / quota) * 100)}% used` : "no quota"
+            subscribed
+              ? quota > 0
+                ? `${Math.round((used / quota) * 100)}% used`
+                : "no quota"
+              : "subscribe to unlock"
           }
         />
-        <StatCard label="/ SAVED SO FAR" value="$0.00" hint="first call coming soon" />
+        <StatCard label="/ SAVED SO FAR" value="$0.00" hint="updates after first call" />
       </section>
 
-      <section className="border border-ink/10 px-8 py-10 mb-12">
-        <p
-          className="font-mono text-ink-faint mb-4"
-          style={{ fontSize: "10.5px", letterSpacing: "0.28em" }}
-        >
-          / {tier === "beta" ? "SUBSCRIBE" : "BILLING"}
-        </p>
-        <h2
-          className="font-display font-medium text-ink mb-4 max-w-[28ch]"
-          style={{
-            fontSize: "clamp(1.4rem, 2.2vw, 1.85rem)",
-            lineHeight: 1.1,
-            letterSpacing: "-0.022em",
-          }}
-        >
-          {tier === "beta"
-            ? "Pick a plan in billing."
-            : "Manage your subscription."}
-        </h2>
-        <Link
-          href="/dashboard/billing"
-          className="group inline-flex items-center gap-2 font-mono"
-          style={{ fontSize: "11.5px", letterSpacing: "0.22em" }}
-        >
-          <span className="relative whitespace-nowrap text-ink">
-            open billing
-            <span
-              aria-hidden
-              className="absolute left-0 right-0 -bottom-1 transition-all duration-300 group-hover:-bottom-1.5"
-              style={{ background: "var(--rust)", height: 1 }}
-            />
-          </span>
-          <span
-            aria-hidden
-            className="translate-x-0 group-hover:translate-x-1 transition-transform"
-            style={{ color: "var(--rust)" }}
+      {!subscribed && (
+        <section className="border border-ink/10 px-8 py-10 mb-12">
+          <p
+            className="font-mono text-ink-faint mb-4"
+            style={{ fontSize: "10.5px", letterSpacing: "0.28em" }}
           >
-            →
-          </span>
-        </Link>
-      </section>
+            / SUBSCRIBE
+          </p>
+          <h2
+            className="font-display font-medium text-ink mb-4 max-w-[28ch]"
+            style={{
+              fontSize: "clamp(1.4rem, 2.2vw, 1.85rem)",
+              lineHeight: 1.1,
+              letterSpacing: "-0.022em",
+            }}
+          >
+            Choose a plan to start routing.
+          </h2>
+          <p
+            className="text-ink-soft max-w-[58ch] mb-8"
+            style={{ fontSize: "1rem", lineHeight: 1.55 }}
+          >
+            Indie, Pro, and Team plans include monthly call quotas. Pay with
+            card or USDC stablecoin on the billing page.
+          </p>
+          <Link
+            href="/dashboard/billing"
+            className="group inline-flex font-mono"
+            style={{ fontSize: "11.5px", letterSpacing: "0.22em" }}
+          >
+            <span className="relative whitespace-nowrap text-ink">
+              open billing
+              <span
+                aria-hidden
+                className="absolute left-0 right-0 -bottom-1 transition-all duration-300 group-hover:-bottom-1.5"
+                style={{ background: "var(--rust)", height: 1 }}
+              />
+            </span>
+          </Link>
+        </section>
+      )}
 
       <section className="border border-ink/10 px-8 py-10">
         <p
@@ -190,30 +202,21 @@ export default async function DashboardOverviewPage({ searchParams }: PageProps)
           className="text-ink-soft max-w-[58ch] mb-8"
           style={{ fontSize: "1rem", lineHeight: 1.55 }}
         >
-          Once you've generated a Duel API key, install our setup helper
-          for whichever editor or agent you use. We currently support
-          Claude Code, Cursor, Codex CLI, Hermes Agent, and Venice — one
-          line per integration.
+          Generate a Duel API key, then install our setup helper for Cursor,
+          Claude Code, Codex CLI, Hermes Agent, or Venice.
         </p>
         <Link
           href="/dashboard/settings"
-          className="group inline-flex items-center gap-2 font-mono"
+          className="group inline-flex font-mono"
           style={{ fontSize: "11.5px", letterSpacing: "0.22em" }}
         >
           <span className="relative whitespace-nowrap text-ink">
-            generate your first key
+            open settings
             <span
               aria-hidden
               className="absolute left-0 right-0 -bottom-1 transition-all duration-300 group-hover:-bottom-1.5"
               style={{ background: "var(--rust)", height: 1 }}
             />
-          </span>
-          <span
-            aria-hidden
-            className="translate-x-0 group-hover:translate-x-1 transition-transform"
-            style={{ color: "var(--rust)" }}
-          >
-            →
           </span>
         </Link>
       </section>

@@ -51,9 +51,23 @@ export function tierFromStripePriceId(priceId: string): PaidTier | null {
 }
 
 export function quotaForTier(tier: PaidTier | "beta"): number {
-  if (tier === "beta") return 5000;
+  if (tier === "beta") return 0;
   const config = PAID_TIERS.find((t) => t.id === tier);
-  return config?.quota ?? 5000;
+  return config?.quota ?? 0;
+}
+
+export function isPaidSubscription(tier: string): tier is PaidTier {
+  return tier === "indie" || tier === "pro" || tier === "team";
+}
+
+/** User-facing label — internal `beta` tier means no paid subscription yet. */
+export function tierDisplayName(tier: string): string {
+  if (isPaidSubscription(tier)) return tier.toUpperCase();
+  return "NO PLAN";
+}
+
+export function tierDisplayHint(tier: string): string {
+  return isPaidSubscription(tier) ? "active subscription" : "subscribe in billing";
 }
 
 export function getTierConfig(tier: PaidTier): TierConfig {

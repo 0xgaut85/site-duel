@@ -47,7 +47,7 @@ your deploy environment when you're ready to expose the dashboard.
 Foundations are in but invisible until the flag flips:
 
 - Magic-link auth via Better-Auth + Resend
-- Public signup — any email at `/login` provisions user + beta subscription
+- Public signup — any email at `/login` provisions an account; subscribe on billing
 - Stripe billing at `/dashboard/billing` (Payment Element: card + USDC stablecoin)
 - Drizzle schema covering users, accounts, account_members, duel_api_keys,
   subscriptions, payment_provider, calls, invites, waitlist

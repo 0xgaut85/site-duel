@@ -3,7 +3,7 @@
  *
  * Auth model: passwordless magic links sent via Resend. Public signup:
  * requesting a magic link for a new email provisions user + account +
- * beta subscription, then sends the link. Unknown vs known emails still
+ * subscription row, then sends the link. Unknown vs known emails still
  * get the same generic UI response (no enumeration).
  *
  * The Drizzle adapter is wired with our renamed auth tables — the

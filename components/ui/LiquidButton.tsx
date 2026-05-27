@@ -73,17 +73,7 @@ export function LiquidButton({
           transform: "translateX(-25%)",
         }}
       />
-      <span className="relative z-10 flex items-center justify-between gap-3 w-full">
-        <span>{children}</span>
-        <span
-          aria-hidden
-          className={`inline-block transition-transform duration-300 ${
-            loading ? "" : "group-hover:translate-x-1.5"
-          }`}
-        >
-          →
-        </span>
-      </span>
+      <span className="relative z-10 w-full text-center">{children}</span>
     </>
   );
 

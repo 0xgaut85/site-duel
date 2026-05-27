@@ -1,6 +1,6 @@
 /**
- * Public signup provisioning — creates user + account + beta subscription
- * when someone requests a magic link for the first time.
+ * Public signup provisioning — creates user + account + subscription row
+ * (unpaid until Stripe checkout completes).
  */
 
 import { eq } from "drizzle-orm";
@@ -18,7 +18,7 @@ type Tx = Parameters<Parameters<ReturnType<typeof getDb>["transaction"]>[0]>[0];
 
 export async function provisionPublicUser(
   rawEmail: string,
-  grantedQuota = 5000,
+  grantedQuota = 0,
 ): Promise<ProvisionResult> {
   const email = rawEmail.trim().toLowerCase();
   const db = getDb();
@@ -65,7 +65,7 @@ export async function ensureUserProvisioned(
 ): Promise<{ accountId: string; subscriptionId: string }> {
   const db = getDb();
   return db.transaction(async (tx) =>
-    ensureAccountForUser(tx, userId, email, 5000),
+    ensureAccountForUser(tx, userId, email, 0),
   );
 }
 

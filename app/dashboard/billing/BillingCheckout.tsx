@@ -9,6 +9,7 @@ import {
 } from "@stripe/react-stripe-js";
 import { loadStripe } from "@stripe/stripe-js";
 import type { TierConfig } from "@/lib/billing/tiers";
+import { isPaidSubscription } from "@/lib/billing/tiers";
 
 const stripePromise = process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY
   ? loadStripe(process.env.NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY)
@@ -95,9 +96,9 @@ export function BillingCheckout({
         className="text-ink-soft max-w-[58ch] mb-8"
         style={{ fontSize: "1rem", lineHeight: 1.55 }}
       >
-        {currentTier === "beta"
-          ? "You're on the free beta tier. Pick a paid plan below — card and USDC stablecoin accepted."
-          : "Change plan or update your payment method by selecting a tier."}
+        {isPaidSubscription(currentTier)
+          ? "Change plan or update your payment method by selecting a tier below."
+          : "Choose indie, pro, or team below. Card and USDC stablecoin accepted."}
       </p>
 
       {apiError && (
@@ -148,7 +149,9 @@ export function BillingCheckout({
                   ? "CURRENT PLAN"
                   : loading && selectedTier === tier.id
                     ? "PREPARING…"
-                    : "SUBSCRIBE →"}
+                    : isPaidSubscription(currentTier)
+                      ? "SWITCH PLAN"
+                      : "SUBSCRIBE"}
               </button>
             </div>
           );
@@ -217,7 +220,7 @@ function CheckoutForm({
           className="font-mono text-ink hover:opacity-70 transition-opacity"
           style={{ fontSize: "11px", letterSpacing: "0.22em" }}
         >
-          BACK TO OVERVIEW →
+          BACK TO OVERVIEW
         </a>
       </div>
     );
@@ -255,7 +258,7 @@ function CheckoutForm({
           className="font-mono text-ink hover:opacity-70 transition-opacity disabled:opacity-40"
           style={{ fontSize: "11px", letterSpacing: "0.22em" }}
         >
-          {submitting ? "PROCESSING…" : "PAY NOW →"}
+          {submitting ? "PROCESSING…" : "PAY NOW"}
         </button>
         <button
           type="button"
@@ -263,7 +266,7 @@ function CheckoutForm({
           className="font-mono text-ink-faint hover:text-ink transition-colors"
           style={{ fontSize: "11px", letterSpacing: "0.22em" }}
         >
-          ← CHANGE PLAN
+          CHANGE PLAN
         </button>
       </div>
     </form>

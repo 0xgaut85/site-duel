@@ -2,22 +2,18 @@
 
 import { useCarousel } from "@/components/carousel/CarouselContext";
 import { LiquidButton } from "@/components/ui/LiquidButton";
-import { WaitlistForm } from "@/components/ui/WaitlistForm";
-import { GITHUB_URL } from "@/lib/site-links";
-import { X_TWITTER_URL } from "@/lib/site-links";
+import { GITHUB_URL, X_TWITTER_URL } from "@/lib/site-links";
 
 /*
- * 04 · USE DUEL AGENTS — product entry frame.
+ * 04 · USE DUEL AGENTS — live product entry frame.
  *
- *   ┌─ 04 · USE DUEL AGENTS ─────── ← BACK TO START ─┐
- *   │                              X / TWITTER        │
- *   │                              [ DUEL APP → ]     │
- *   │   Use Duel Agents.                              │
- *   │   Sign in, pick a plan in billing, or join the    │
- *   │   waitlist for launch updates.                  │
- *   │   GITHUB →                                      │
- *   │   [ waitlist form ]                             │
- *   └─────────────────────────────────────────────────┘
+ *   ┌─ 04 · USE DUEL AGENTS ─────── BACK TO START ─┐
+ *   │                              X / TWITTER     │
+ *   │                              GITHUB          │
+ *   │                              [ DUEL APP ]    │
+ *   │   Use Duel Agents.                           │
+ *   │   Sign in, manage keys, subscribe in billing.│
+ *   └──────────────────────────────────────────────┘
  */
 export function AccessFrame() {
   const { goTo, frames } = useCarousel();
@@ -46,7 +42,7 @@ export function AccessFrame() {
 
       <div
         data-access-rail=""
-        className="absolute left-0 right-0 z-10 flex items-start justify-between"
+        className="absolute left-0 right-0 z-20 flex items-start justify-between"
         style={{
           top: "var(--frame-padding)",
           paddingLeft: "var(--frame-padding)",
@@ -56,7 +52,7 @@ export function AccessFrame() {
         <span className="font-mono text-[10px] tracking-[0.3em] text-paper-faint">
           04 · USE DUEL AGENTS
         </span>
-        <div className="relative z-50 flex w-[min(100%,11.5rem)] flex-col items-stretch gap-3 pointer-events-auto">
+        <div className="relative flex w-[min(100%,11.5rem)] flex-col items-stretch gap-3 pointer-events-auto">
           <button
             type="button"
             onClick={() => {
@@ -64,7 +60,7 @@ export function AccessFrame() {
             }}
             className="font-mono text-[10px] tracking-[0.3em] text-paper-faint hover:text-paper transition-colors cursor-pointer text-right"
           >
-            ← BACK TO START
+            BACK TO START
           </button>
           <a
             href={X_TWITTER_URL}
@@ -74,7 +70,15 @@ export function AccessFrame() {
           >
             X / TWITTER
           </a>
-          <LiquidButton href="/dashboard" darkBg type="button">
+          <a
+            href={GITHUB_URL}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="font-mono text-[10px] tracking-[0.28em] text-paper-faint hover:text-paper transition-colors text-right"
+          >
+            GITHUB
+          </a>
+          <LiquidButton href="/dashboard" darkBg>
             DUEL APP
           </LiquidButton>
         </div>
@@ -82,10 +86,10 @@ export function AccessFrame() {
 
       <div
         data-access-content=""
-        className="relative z-10 h-full w-full flex items-center max-md:items-start max-md:py-[calc(var(--frame-padding)*2+6rem)]"
+        className="relative z-10 h-full w-full flex items-center max-md:items-start max-md:py-[calc(var(--frame-padding)*2+8rem)] pointer-events-none"
       >
         <div
-          className="w-full flex flex-col gap-8 max-w-[42rem]"
+          className="pointer-events-auto w-full flex flex-col gap-8 max-w-[42rem]"
           style={{
             paddingLeft: "var(--frame-padding)",
             paddingRight: "var(--frame-padding)",
@@ -96,25 +100,16 @@ export function AccessFrame() {
               Use Duel Agents.
             </h2>
             <p className="text-paper-faint text-[clamp(15px,1.15vw,17px)] leading-[1.55] max-w-[38ch]">
-              Open the dashboard to sign in with a magic link, manage API
-              keys, and subscribe on the billing page. Card and USDC
-              (Polygon, Base, and more) when Stripe stablecoin is enabled.
+            Sign in with a magic link, pick indie, pro, or team on billing,
+            and generate API keys in settings. Card and USDC when stablecoin
+            is enabled in Stripe.
             </p>
-            <a
-              href={GITHUB_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="font-mono text-[10px] tracking-[0.28em] text-paper-faint hover:text-paper transition-colors w-fit"
-            >
-              GITHUB →
-            </a>
           </div>
 
-          <div className="flex flex-col gap-3 max-w-[28rem]">
-            <p className="font-mono text-[10px] tracking-[0.22em] text-paper-faint">
-              OR JOIN THE WAITLIST
-            </p>
-            <WaitlistForm darkBg />
+          <div className="max-w-[20rem] md:hidden">
+            <LiquidButton href="/dashboard" darkBg>
+              DUEL APP
+            </LiquidButton>
           </div>
         </div>
       </div>

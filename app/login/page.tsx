@@ -44,14 +44,14 @@ export default function LoginPage() {
             letterSpacing: "-0.025em",
           }}
         >
-          Welcome back.
+          Sign in.
         </h1>
         <p
-          className="text-ink-soft mb-10 max-w-[30ch]"
+          className="text-ink-soft mb-10 max-w-[34ch]"
           style={{ fontSize: "clamp(0.95rem, 1.1vw, 1.05rem)", lineHeight: 1.55 }}
         >
-          Enter your email. We'll send a one-time sign-in link — new accounts
-          are created automatically.
+          Enter your email for a one-time sign-in link. New accounts are
+          created automatically — subscribe on billing after you sign in.
         </p>
 
         <LoginForm />
@@ -60,12 +60,12 @@ export default function LoginPage() {
           className="font-mono text-ink-faint mt-12"
           style={{ fontSize: "11px", letterSpacing: "0.22em" }}
         >
-          / NEW HERE? &nbsp;
+          / BACK TO SITE &nbsp;
           <a
-            href="/#04-access"
+            href="/"
             className="text-ink hover:opacity-70 transition-opacity"
           >
-            USE DUEL AGENTS →
+            DUEL AGENTS
           </a>
         </p>
       </div>

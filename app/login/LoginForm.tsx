@@ -57,8 +57,9 @@ export function LoginForm() {
           / CHECK YOUR INBOX
         </p>
         <p className="text-ink-soft" style={{ fontSize: "0.975rem", lineHeight: 1.55 }}>
-          If <span className="text-ink font-medium">{state.email}</span> is on
-          file, a sign-in link is on its way. It's valid for 15 minutes.
+          We sent a sign-in link to{" "}
+          <span className="text-ink font-medium">{state.email}</span>. It&apos;s
+          valid for 15 minutes.
         </p>
       </div>
     );
@@ -99,7 +100,7 @@ export function LoginForm() {
       <button
         type="submit"
         disabled={state.kind === "submitting"}
-        className="group self-start mt-2 inline-flex items-center gap-2 font-mono pointer-events-auto disabled:opacity-50"
+        className="group self-start mt-2 inline-flex font-mono pointer-events-auto disabled:opacity-50"
         style={{ fontSize: "11.5px", letterSpacing: "0.22em" }}
       >
         <span className="relative whitespace-nowrap">
@@ -109,13 +110,6 @@ export function LoginForm() {
             className="absolute left-0 right-0 -bottom-1 transition-all duration-300 group-hover:-bottom-1.5"
             style={{ background: "var(--rust)", height: 1 }}
           />
-        </span>
-        <span
-          aria-hidden
-          className="translate-x-0 group-hover:translate-x-1 transition-transform"
-          style={{ color: "var(--rust)" }}
-        >
-          →
         </span>
       </button>
     </form>

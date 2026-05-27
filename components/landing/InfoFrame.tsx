@@ -776,8 +776,7 @@ function ProofContent({
  *
  * "Why this, not the existing tools." A short scrambled headline and
  * a list of three concrete differentiators with mono lead-ins, then a
- * quiet `request access` link in the footer (no longer the focus of
- * the box — supporting action, not the headline).
+ * quiet link to the live product frame — supporting action, not the headline.
  */
 
 function WhyContent({
@@ -839,23 +838,16 @@ function WhyContent({
       <button
         type="button"
         onClick={() => accessIndex >= 0 && goTo(accessIndex)}
-        className={`group self-start inline-flex items-baseline gap-2 font-mono pointer-events-auto flex-none ${heading}`}
+        className={`group self-start font-mono pointer-events-auto flex-none ${heading}`}
         style={TYPE.tag}
       >
         <span className="relative whitespace-nowrap">
-          request access
+          use duel agents
           <span
             aria-hidden
             className="absolute left-0 right-0 -bottom-1 origin-left transition-all duration-300 group-hover:-bottom-1.5"
             style={{ background: "var(--rust)", height: 1 }}
           />
-        </span>
-        <span
-          aria-hidden
-          className="translate-x-0 group-hover:translate-x-1 transition-transform"
-          style={{ color: "var(--rust)" }}
-        >
-          ↗
         </span>
       </button>
     </div>

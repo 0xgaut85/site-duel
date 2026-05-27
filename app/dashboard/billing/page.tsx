@@ -1,7 +1,7 @@
 import { eq } from "drizzle-orm";
 import { requireSession } from "@/lib/session";
 import { ensureUserProvisioned } from "@/lib/provision";
-import { PAID_TIERS } from "@/lib/billing/tiers";
+import { PAID_TIERS, tierDisplayName, isPaidSubscription } from "@/lib/billing/tiers";
 import { isStripeConfigured } from "@/lib/stripe";
 import { db, schema } from "@/db/client";
 import { BillingCheckout } from "./BillingCheckout";
@@ -40,6 +40,7 @@ export default async function BillingPage({ searchParams }: PageProps) {
 
   const tier = subscription?.tier ?? "beta";
   const status = subscription?.status ?? "active";
+  const subscribed = isPaidSubscription(tier);
 
   return (
     <>
@@ -84,11 +85,15 @@ export default async function BillingPage({ searchParams }: PageProps) {
       )}
 
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-px mb-12 bg-ink/10 border border-ink/10">
-        <StatCard label="/ CURRENT TIER" value={tier.toUpperCase()} />
+        <StatCard label="/ PLAN" value={tierDisplayName(tier)} />
         <StatCard label="/ STATUS" value={status.toUpperCase()} />
         <StatCard
           label="/ CALLS THIS PERIOD"
-          value={`${formatNumber(subscription?.callsUsedThisPeriod ?? 0)} / ${formatNumber(subscription?.monthlyCallQuota ?? 0)}`}
+          value={
+            subscribed
+              ? `${formatNumber(subscription?.callsUsedThisPeriod ?? 0)} / ${formatNumber(subscription?.monthlyCallQuota ?? 0)}`
+              : "—"
+          }
         />
       </section>
 
