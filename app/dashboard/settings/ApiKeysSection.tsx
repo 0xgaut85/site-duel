@@ -127,7 +127,7 @@ export function ApiKeysSection({
           className="text-ink-soft mb-6 max-w-[50ch]"
           style={{ fontSize: "0.975rem", lineHeight: 1.55 }}
         >
-          Subscribe on the{" "}
+          Subscribe via Stripe on the{" "}
           <a href="/dashboard/billing" className="text-ink underline-offset-4 hover:underline">
             billing page
           </a>{" "}
@@ -203,7 +203,7 @@ export function ApiKeysSection({
             className="text-ink-soft mb-2"
             style={{ fontSize: "0.975rem", lineHeight: 1.55 }}
           >
-            {canCreateKeys ? "No keys yet." : "Subscribe to create API keys."}
+            {canCreateKeys ? "No keys yet." : "Subscribe via Stripe to create API keys."}
           </p>
           <p
             className="font-mono text-ink-faint"
@@ -211,7 +211,7 @@ export function ApiKeysSection({
           >
             {canCreateKeys
               ? "/ GENERATE ONE TO START ROUTING THROUGH DUEL"
-              : "/ PAY WITH USDC ON BILLING FIRST"}
+              : "/ SUBSCRIBE VIA STRIPE FIRST"}
           </p>
         </div>
       ) : (

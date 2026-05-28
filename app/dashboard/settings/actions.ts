@@ -55,7 +55,7 @@ export async function createApiKey(formData: FormData): Promise<
   if (!hasActivePaidSubscription(subscription)) {
     return {
       ok: false,
-      error: "Subscribe on the billing page before creating API keys.",
+      error: "Subscribe via Stripe on the billing page before creating API keys.",
     };
   }
 

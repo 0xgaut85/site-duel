@@ -161,9 +161,8 @@ export default async function DashboardOverviewPage({ searchParams }: PageProps)
             className="text-ink-soft max-w-[58ch] mb-8"
             style={{ fontSize: "1rem", lineHeight: 1.55 }}
           >
-            Indie ($19/mo), Pro ($49/mo), and Team ($199/mo). Card and USDC
-            Pay with USDC on Base or Polygon from the billing page. See pricing
-            on the billing page.
+            Indie ($19/mo), Pro ($49/mo), and Team ($199/mo). Subscribe via
+            Stripe — card or Stripe Crypto — from the billing page.
           </p>
           <Link
             href="/dashboard/billing"

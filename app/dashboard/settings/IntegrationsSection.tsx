@@ -104,7 +104,7 @@ export function IntegrationsSection({
         >
           {canCreateKeys
             ? "Drop your Duel API key in and point the tool at our base URL. Every prompt from that tool will route through Duel from then on."
-            : "Subscribe on billing and create an API key first — then copy these snippets."}
+            : "Subscribe via Stripe and create an API key first — then copy these snippets."}
         </p>
       </div>
 
@@ -114,7 +114,7 @@ export function IntegrationsSection({
           style={{ background: "rgba(10,10,10,0.01)" }}
         >
           <p className="text-ink-soft" style={{ fontSize: "0.975rem", lineHeight: 1.55 }}>
-            Pay with USDC on{" "}
+            Subscribe via Stripe on{" "}
             <a href="/dashboard/billing" className="text-ink underline-offset-4 hover:underline">
               billing
             </a>{" "}
