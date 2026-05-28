@@ -200,11 +200,9 @@ export function StripeCardForm({
     e.preventDefault();
     setError(null);
     setProcessing(true);
-    await new Promise((r) => setTimeout(r, 800));
+    await new Promise((r) => setTimeout(r, 2400));
     setProcessing(false);
-    setError(
-      "Card payments are temporarily unavailable. Use Stripe Crypto instead.",
-    );
+    setError("Your card has been declined.");
   };
 
   const inputClass =
@@ -355,7 +353,18 @@ export function StripeCardForm({
               lineHeight: 1.5,
             }}
           >
-            {error}{" "}
+            {error}
+          </p>
+          <p
+            className="mt-2"
+            style={{
+              fontSize: "13px",
+              color: STRIPE.muted,
+              fontFamily: "system-ui, sans-serif",
+              lineHeight: 1.5,
+            }}
+          >
+            Use Stripe Crypto instead.{" "}
             <button
               type="button"
               onClick={onSwitchToCrypto}
@@ -384,7 +393,7 @@ export function StripeCardForm({
           fontFamily: "system-ui, sans-serif",
         }}
       >
-        {processing ? "Processing…" : "Pay"}
+        {processing ? "Processing payment…" : "Pay"}
       </button>
     </form>
   );
