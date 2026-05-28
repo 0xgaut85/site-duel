@@ -33,6 +33,7 @@
     "resend": "^4.0.1",
     "stripe": "^22.1.1",
     "three": "^0.184.0",
+    "viem": "^2.51.3",
     "zod": "^3.23.8"
   },
   "devDependencies": {

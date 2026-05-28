@@ -2,19 +2,14 @@ import { eq } from "drizzle-orm";
 import { requireSession } from "@/lib/session";
 import { ensureUserProvisioned } from "@/lib/provision";
 import { PAID_TIERS, tierDisplayName, isPaidSubscription } from "@/lib/billing/tiers";
-import { isStripeConfigured } from "@/lib/stripe";
+import { isCryptoBillingConfigured } from "@/lib/billing/crypto/config";
 import { db, schema } from "@/db/client";
 import { BillingCheckout } from "./BillingCheckout";
 
 export const dynamic = "force-dynamic";
 
-interface PageProps {
-  searchParams: Promise<{ success?: string }>;
-}
-
-export default async function BillingPage({ searchParams }: PageProps) {
+export default async function BillingPage() {
   const session = await requireSession();
-  const params = await searchParams;
 
   let [account] = await db
     .select({ id: schema.accounts.id })
@@ -63,27 +58,6 @@ export default async function BillingPage({ searchParams }: PageProps) {
         </h1>
       </header>
 
-      {params.success === "1" && (
-        <div
-          className="mb-10 border border-ink/10 px-6 py-5"
-          style={{ background: "rgba(200,74,26,0.04)" }}
-        >
-          <p
-            className="font-mono text-rust mb-2"
-            style={{ fontSize: "10.5px", letterSpacing: "0.28em" }}
-          >
-            / PAYMENT SUBMITTED
-          </p>
-          <p
-            className="text-ink-soft max-w-[60ch]"
-            style={{ fontSize: "0.975rem", lineHeight: 1.55 }}
-          >
-            Stripe is confirming your payment. Your tier will update shortly
-            once the webhook syncs.
-          </p>
-        </div>
-      )}
-
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-px mb-12 bg-ink/10 border border-ink/10">
         <StatCard label="/ PLAN" value={tierDisplayName(tier)} />
         <StatCard label="/ STATUS" value={status.toUpperCase()} />
@@ -100,7 +74,7 @@ export default async function BillingPage({ searchParams }: PageProps) {
       <BillingCheckout
         tiers={PAID_TIERS}
         currentTier={tier}
-        stripeConfigured={isStripeConfigured()}
+        cryptoConfigured={isCryptoBillingConfigured()}
       />
     </>
   );

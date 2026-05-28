@@ -74,7 +74,11 @@ OPENAI_API_KEY=<your-duel-key>`,
   },
 ];
 
-export function IntegrationsSection() {
+export function IntegrationsSection({
+  canCreateKeys,
+}: {
+  canCreateKeys: boolean;
+}) {
   return (
     <section>
       <div className="mb-6">
@@ -98,18 +102,32 @@ export function IntegrationsSection() {
           className="text-ink-soft max-w-[58ch]"
           style={{ fontSize: "0.975rem", lineHeight: 1.55 }}
         >
-          Drop your Duel API key in and point the tool at our base URL.
-          Every prompt from that tool will route through Duel from then
-          on. Replace <code className="font-mono text-ink">&lt;your-duel-key&gt;</code> with
-          a key you generated above.
+          {canCreateKeys
+            ? "Drop your Duel API key in and point the tool at our base URL. Every prompt from that tool will route through Duel from then on."
+            : "Subscribe on billing and create an API key first — then copy these snippets."}
         </p>
       </div>
 
-      <div className="border border-ink/10 divide-y divide-ink/10">
-        {INTEGRATIONS.map((i) => (
-          <IntegrationRow key={i.id} integration={i} />
-        ))}
-      </div>
+      {!canCreateKeys ? (
+        <div
+          className="border border-dashed border-ink/15 px-8 py-12 text-center opacity-60"
+          style={{ background: "rgba(10,10,10,0.01)" }}
+        >
+          <p className="text-ink-soft" style={{ fontSize: "0.975rem", lineHeight: 1.55 }}>
+            Pay with USDC on{" "}
+            <a href="/dashboard/billing" className="text-ink underline-offset-4 hover:underline">
+              billing
+            </a>{" "}
+            to unlock integration snippets.
+          </p>
+        </div>
+      ) : (
+        <div className="border border-ink/10 divide-y divide-ink/10">
+          {INTEGRATIONS.map((i) => (
+            <IntegrationRow key={i.id} integration={i} />
+          ))}
+        </div>
+      )}
     </section>
   );
 }

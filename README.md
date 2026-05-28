@@ -37,6 +37,8 @@ live. Unauthenticated visits to `/dashboard` redirect to `/login`. Configure
 ## Phase 1 status (current)
 
 - Magic-link auth via Better-Auth + Resend
+- USDC billing on Base / Polygon (on-chain verification, 30-day subscriptions)
+- API keys gated behind active paid subscription
 - Public signup — any email at `/login` provisions an account; subscribe on billing
 - Stripe billing at `/dashboard/billing` (Payment Element: card + USDC stablecoin)
 - Drizzle schema covering users, accounts, account_members, duel_api_keys,
@@ -81,6 +83,9 @@ Without `DATABASE_URL` the marketing site still runs, but `/login`,
 | `RESEND_API_KEY`             | Transactional email sender (sign-in, invites)           |
 | `RESEND_FROM_EMAIL`          | `Duel Agents <hello@duelagents.com>`                   |
 | `RESEND_NOTIFY_EMAIL`        | Internal address for new-signup pings                   |
+| `CRYPTO_TREASURY_ADDRESS`    | Wallet that receives USDC (same on Base + Polygon)        |
+| `BASE_RPC_URL`               | Optional Base RPC (defaults to public mainnet RPC)        |
+| `POLYGON_RPC_URL`            | Optional Polygon RPC (defaults to public mainnet RPC)     |
 | `UPSTASH_REDIS_REST_URL`     | Quota counters + rate limits                            |
 | `UPSTASH_REDIS_REST_TOKEN`   | Upstash REST token                                      |
 | `STRIPE_SECRET_KEY`          | Stripe secret key (server-side)                         |
@@ -114,7 +119,18 @@ npx tsx scripts/bootstrap-admin.mts you@yourdomain.com
 
 Set `DUEL_ADMIN_EMAILS` to that address so the admin nav appears.
 
-## Stripe setup (billing)
+## Crypto billing (USDC)
+
+1. Set `CRYPTO_TREASURY_ADDRESS` to the wallet that receives USDC on **Base** and **Polygon** (same address on both chains).
+2. Optionally set `BASE_RPC_URL` and `POLYGON_RPC_URL` (Alchemy/Infura recommended for production; public RPCs work for dev).
+3. Users subscribe at `/dashboard/billing` — send the exact USDC amount shown; the server auto-detects the transfer and activates the tier for 30 days.
+4. Card checkout in the UI is intentionally disabled (shows an error). Only USDC works.
+
+Tiers: Indie $19, Pro $49, Team $199 (USDC, 6-decimal exact match).
+
+## Stripe setup (legacy, optional)
+
+Stripe routes remain in the repo but are not used by the billing UI. Skip unless re-enabling card checkout later.
 
 1. Create three Products/Prices in the [Stripe Dashboard](https://dashboard.stripe.com) matching schema tiers: indie ($19), pro ($49), team ($199).
 2. Copy each Price ID into `STRIPE_PRICE_INDIE`, `STRIPE_PRICE_PRO`, `STRIPE_PRICE_TEAM`.
@@ -135,11 +151,12 @@ Set these on the **web service** that runs `next build` (not just at runtime):
 | `BETTER_AUTH_URL` | **`https://duelagents.com`** (must match your live origin) |
 | `RESEND_API_KEY` | Resend API key |
 | `RESEND_FROM_EMAIL` | Verified sender in Resend |
+| `CRYPTO_TREASURY_ADDRESS` | USDC treasury wallet (Base + Polygon) |
 | `UPSTASH_REDIS_REST_URL` / `UPSTASH_REDIS_REST_TOKEN` | Optional but recommended for quotas |
 
 **Remove** `NEXT_PUBLIC_PRODUCT_LIVE` if it is still set — the release flag was removed; dashboard and auth are always live.
 
-Stripe vars (`STRIPE_*`, `NEXT_PUBLIC_STRIPE_PUBLISHABLE_KEY`) are only needed when billing checkout is enabled.
+Stripe vars are optional (legacy). Run `npm run db:migrate` after deploy when the schema changes.
 
 After changing env vars, trigger a **new deploy** (rebuild) on Railway so `NEXT_PUBLIC_*` values are picked up at build time.
 

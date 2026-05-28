@@ -18,6 +18,7 @@ import { nanoid } from "nanoid";
 import { revalidatePath } from "next/cache";
 import { db, schema } from "@/db/client";
 import { generateApiKey } from "@/lib/api-keys";
+import { hasActivePaidSubscription } from "@/lib/billing/subscription-access";
 import { requireSession } from "@/lib/session";
 
 export interface CreateApiKeyResult {
@@ -43,6 +44,19 @@ export async function createApiKey(formData: FormData): Promise<
 
   if (!account) {
     return { ok: false, error: "No account found for this user." };
+  }
+
+  const [subscription] = await db
+    .select()
+    .from(schema.subscriptions)
+    .where(eq(schema.subscriptions.accountId, account.id))
+    .limit(1);
+
+  if (!hasActivePaidSubscription(subscription)) {
+    return {
+      ok: false,
+      error: "Subscribe on the billing page before creating API keys.",
+    };
   }
 
   const { plaintext, hash, prefix } = generateApiKey();

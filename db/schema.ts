@@ -67,6 +67,14 @@ export const inviteStatusEnum = pgEnum("invite_status", [
 
 export const callProviderEnum = pgEnum("call_provider", ["anthropic", "openai"]);
 
+export const cryptoChainEnum = pgEnum("crypto_chain", ["base", "polygon"]);
+
+export const cryptoPaymentStatusEnum = pgEnum("crypto_payment_status", [
+  "pending",
+  "confirmed",
+  "expired",
+]);
+
 /* ─────────────────────────────────────────────────────────── auth tables
  *
  * Owned by Better-Auth. The shapes follow Better-Auth's Drizzle adapter
@@ -322,6 +330,47 @@ export const paymentProvider = pgTable("payment_provider", {
   lastSyncedAt: timestamp("last_synced_at", { withTimezone: true }),
 });
 
+/** On-chain USDC payment intents for crypto billing. Each intent carries a
+ *  unique exact USDC amount so incoming transfers can be matched without
+ *  a memo field. */
+export const cryptoPaymentIntents = pgTable(
+  "crypto_payment_intents",
+  {
+    id: text("id").primaryKey(),
+    accountId: text("account_id")
+      .notNull()
+      .references(() => accounts.id, { onDelete: "cascade" }),
+    subscriptionId: text("subscription_id")
+      .notNull()
+      .references(() => subscriptions.id, { onDelete: "cascade" }),
+    tier: subscriptionTierEnum("tier").notNull(),
+    chain: cryptoChainEnum("chain").notNull(),
+    /** Exact USDC amount in 6-decimal micro-units (e.g. 19_000_047 = 19.000047). */
+    amountMicroUsdc: bigint("amount_micro_usdc", { mode: "number" }).notNull(),
+    status: cryptoPaymentStatusEnum("status").notNull().default("pending"),
+    matchedTxHash: text("matched_tx_hash"),
+    matchedAt: timestamp("matched_at", { withTimezone: true }),
+    /** Block number at intent creation — log scans start here. */
+    scanFromBlock: bigint("scan_from_block", { mode: "number" }).notNull(),
+    expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    createdAt: timestamp("created_at", { withTimezone: true })
+      .notNull()
+      .defaultNow(),
+  },
+  (t) => ({
+    statusChainAmountIdx: index("crypto_intents_status_chain_amount_idx").on(
+      t.status,
+      t.chain,
+      t.amountMicroUsdc,
+    ),
+    accountIdx: index("crypto_intents_account_idx").on(t.accountId),
+    chainTxUnique: uniqueIndex("crypto_intents_chain_tx_unique").on(
+      t.chain,
+      t.matchedTxHash,
+    ),
+  }),
+);
+
 /* ─────────────────────────────────────────────────────────── product: calls */
 
 /** One row per routed prompt. Source of truth for savings analytics and
@@ -532,3 +581,4 @@ export type Subscription = typeof subscriptions.$inferSelect;
 export type Call = typeof calls.$inferSelect;
 export type Invite = typeof invites.$inferSelect;
 export type Waitlist = typeof waitlist.$inferSelect;
+export type CryptoPaymentIntent = typeof cryptoPaymentIntents.$inferSelect;

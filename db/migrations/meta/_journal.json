@@ -8,6 +8,13 @@
       "when": 1779196092082,
       "tag": "0000_init",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1779958649700,
+      "tag": "0001_worthless_hercules",
+      "breakpoints": true
     }
   ]
 }

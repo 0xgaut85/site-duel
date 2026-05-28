@@ -29,7 +29,13 @@ interface FreshKey {
   plaintext: string;
 }
 
-export function ApiKeysSection({ keys }: { keys: KeyRow[] }) {
+export function ApiKeysSection({
+  keys,
+  canCreateKeys,
+}: {
+  keys: KeyRow[];
+  canCreateKeys: boolean;
+}) {
   const [showCreate, setShowCreate] = useState(false);
   const [freshKey, setFreshKey] = useState<FreshKey | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -87,12 +93,14 @@ export function ApiKeysSection({ keys }: { keys: KeyRow[] }) {
         </div>
         <button
           type="button"
+          disabled={!canCreateKeys}
           onClick={() => {
+            if (!canCreateKeys) return;
             setShowCreate(true);
             setFreshKey(null);
             setError(null);
           }}
-          className="group inline-flex items-center gap-2 font-mono"
+          className="group inline-flex items-center gap-2 font-mono disabled:opacity-40 disabled:cursor-not-allowed"
           style={{ fontSize: "11px", letterSpacing: "0.22em" }}
         >
           <span className="relative whitespace-nowrap text-ink">
@@ -114,6 +122,18 @@ export function ApiKeysSection({ keys }: { keys: KeyRow[] }) {
       </div>
 
       {freshKey && <FreshKeyBanner fresh={freshKey} onDismiss={() => setFreshKey(null)} />}
+      {!canCreateKeys && (
+        <p
+          className="text-ink-soft mb-6 max-w-[50ch]"
+          style={{ fontSize: "0.975rem", lineHeight: 1.55 }}
+        >
+          Subscribe on the{" "}
+          <a href="/dashboard/billing" className="text-ink underline-offset-4 hover:underline">
+            billing page
+          </a>{" "}
+          before creating API keys.
+        </p>
+      )}
       {error && (
         <p
           className="font-mono text-rust mb-4"
@@ -123,7 +143,7 @@ export function ApiKeysSection({ keys }: { keys: KeyRow[] }) {
         </p>
       )}
 
-      {showCreate && (
+      {showCreate && canCreateKeys && (
         <form
           action={onCreate}
           className="border border-ink/10 p-6 mb-6"
@@ -183,13 +203,15 @@ export function ApiKeysSection({ keys }: { keys: KeyRow[] }) {
             className="text-ink-soft mb-2"
             style={{ fontSize: "0.975rem", lineHeight: 1.55 }}
           >
-            No keys yet.
+            {canCreateKeys ? "No keys yet." : "Subscribe to create API keys."}
           </p>
           <p
             className="font-mono text-ink-faint"
             style={{ fontSize: "10.5px", letterSpacing: "0.22em" }}
           >
-            / GENERATE ONE TO START ROUTING THROUGH DUEL
+            {canCreateKeys
+              ? "/ GENERATE ONE TO START ROUTING THROUGH DUEL"
+              : "/ PAY WITH USDC ON BILLING FIRST"}
           </p>
         </div>
       ) : (

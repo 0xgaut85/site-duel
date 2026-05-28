@@ -10,6 +10,7 @@
 
 import { desc, eq } from "drizzle-orm";
 import { requireSession } from "@/lib/session";
+import { hasActivePaidSubscription } from "@/lib/billing/subscription-access";
 import { db, schema } from "@/db/client";
 import { ApiKeysSection } from "./ApiKeysSection";
 import { IntegrationsSection } from "./IntegrationsSection";
@@ -40,6 +41,16 @@ export default async function SettingsPage() {
         .orderBy(desc(schema.duelApiKeys.createdAt))
     : [];
 
+  const [subscription] = account
+    ? await db
+        .select()
+        .from(schema.subscriptions)
+        .where(eq(schema.subscriptions.accountId, account.id))
+        .limit(1)
+    : [];
+
+  const canCreateKeys = hasActivePaidSubscription(subscription);
+
   return (
     <>
       <header className="mb-12">
@@ -62,8 +73,8 @@ export default async function SettingsPage() {
       </header>
 
       <div className="grid grid-cols-1 gap-16">
-        <ApiKeysSection keys={keys} />
-        <IntegrationsSection />
+        <ApiKeysSection keys={keys} canCreateKeys={canCreateKeys} />
+        <IntegrationsSection canCreateKeys={canCreateKeys} />
       </div>
     </>
   );
