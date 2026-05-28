@@ -1,5 +1,6 @@
 import {
   createPublicClient,
+  decodeEventLog,
   http,
   parseAbiItem,
   type Address,
@@ -83,4 +84,54 @@ export async function findMatchingUsdcTransfer(opts: {
 
 export function explorerUrl(chain: CryptoChain, txHash: string): string {
   return `${EXPLORER_TX_URL[chain]}${txHash}`;
+}
+
+/**
+ * Verifies a specific transaction contains a USDC transfer to the treasury
+ * for the exact intent amount.
+ */
+export async function verifyUsdcTransferTx(opts: {
+  chain: CryptoChain;
+  txHash: Hash;
+  treasury: Address;
+  amountMicroUsdc: number;
+}): Promise<MatchedTransfer | null> {
+  const client = getClient(opts.chain);
+  const usdc = USDC_CONTRACTS[opts.chain];
+
+  const receipt = await client.getTransactionReceipt({ hash: opts.txHash });
+  if (receipt.status !== "success") return null;
+
+  for (const log of receipt.logs) {
+    if (log.address.toLowerCase() !== usdc.toLowerCase()) continue;
+
+    try {
+      const decoded = decodeEventLog({
+        abi: [transferEvent],
+        data: log.data,
+        topics: log.topics,
+      });
+
+      if (decoded.eventName !== "Transfer") continue;
+
+      const { from, to, value } = decoded.args as {
+        from: Address;
+        to: Address;
+        value: bigint;
+      };
+
+      if (to.toLowerCase() !== opts.treasury.toLowerCase()) continue;
+      if (value !== BigInt(opts.amountMicroUsdc)) continue;
+
+      return {
+        txHash: opts.txHash,
+        from,
+        blockNumber: receipt.blockNumber,
+      };
+    } catch {
+      continue;
+    }
+  }
+
+  return null;
 }

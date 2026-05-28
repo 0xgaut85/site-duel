@@ -16,6 +16,7 @@ import {
   explorerUrl,
   findMatchingUsdcTransfer,
   getCurrentBlockNumber,
+  verifyUsdcTransferTx,
 } from "@/lib/billing/crypto/verify";
 import type { Hash } from "viem";
 import { getAccountBillingContext } from "@/lib/billing/account";
@@ -24,6 +25,7 @@ import { quotaForTier, type PaidTier } from "@/lib/billing/tiers";
 export interface CreateIntentResult {
   intentId: string;
   amountUsdc: string;
+  amountMicroUsdc: number;
   treasuryAddress: string;
   chain: CryptoChain;
   tier: PaidTier;
@@ -92,6 +94,7 @@ export async function createCryptoPaymentIntent(opts: {
   return {
     intentId,
     amountUsdc: formatMicroUsdc(amountMicroUsdc),
+    amountMicroUsdc,
     treasuryAddress: treasury,
     chain: opts.chain,
     tier: opts.tier,
@@ -246,6 +249,88 @@ export async function getCryptoIntentStatus(opts: {
 
   return {
     status: "pending",
+    amountUsdc: formatMicroUsdc(intent.amountMicroUsdc),
+  };
+}
+
+export async function submitCryptoPaymentTx(opts: {
+  intentId: string;
+  txHash: string;
+  accountId: string;
+  userEmail: string;
+}): Promise<IntentStatusResult | null> {
+  const [intent] = await db
+    .select()
+    .from(schema.cryptoPaymentIntents)
+    .where(eq(schema.cryptoPaymentIntents.id, opts.intentId))
+    .limit(1);
+
+  if (!intent || intent.accountId !== opts.accountId) return null;
+
+  await expireStaleIntent(intent);
+
+  if (intent.status === "confirmed" && intent.matchedTxHash) {
+    return {
+      status: "confirmed",
+      tier: intent.tier as PaidTier,
+      txHash: intent.matchedTxHash,
+      explorerUrl: explorerUrl(intent.chain, intent.matchedTxHash),
+      amountUsdc: formatMicroUsdc(intent.amountMicroUsdc),
+    };
+  }
+
+  if (intent.status === "expired") {
+    return {
+      status: "expired",
+      amountUsdc: formatMicroUsdc(intent.amountMicroUsdc),
+    };
+  }
+
+  const treasury = getTreasuryAddress();
+  if (!treasury) {
+    throw new Error("Crypto billing is not configured.");
+  }
+
+  const [existingClaim] = await db
+    .select({ id: schema.cryptoPaymentIntents.id })
+    .from(schema.cryptoPaymentIntents)
+    .where(
+      and(
+        eq(schema.cryptoPaymentIntents.status, "confirmed"),
+        eq(schema.cryptoPaymentIntents.chain, intent.chain),
+        eq(schema.cryptoPaymentIntents.matchedTxHash, opts.txHash),
+      ),
+    )
+    .limit(1);
+
+  if (existingClaim && existingClaim.id !== intent.id) {
+    return {
+      status: "pending",
+      amountUsdc: formatMicroUsdc(intent.amountMicroUsdc),
+    };
+  }
+
+  const match = await verifyUsdcTransferTx({
+    chain: intent.chain,
+    txHash: opts.txHash as Hash,
+    treasury,
+    amountMicroUsdc: intent.amountMicroUsdc,
+  });
+
+  if (!match) {
+    return {
+      status: "pending",
+      amountUsdc: formatMicroUsdc(intent.amountMicroUsdc),
+    };
+  }
+
+  await fulfillIntent(intent, match.txHash, opts.userEmail);
+
+  return {
+    status: "confirmed",
+    tier: intent.tier as PaidTier,
+    txHash: match.txHash,
+    explorerUrl: explorerUrl(intent.chain, match.txHash),
     amountUsdc: formatMicroUsdc(intent.amountMicroUsdc),
   };
 }

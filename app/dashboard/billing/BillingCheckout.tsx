@@ -22,6 +22,7 @@ interface BillingCheckoutProps {
 interface CryptoIntent {
   intentId: string;
   amountUsdc: string;
+  amountMicroUsdc: number;
   treasuryAddress: string;
   chain: Chain;
   tier: TierConfig["id"];
@@ -179,6 +180,10 @@ export function BillingCheckout({
               setIntent(null);
               setIntentStatus(null);
               void createIntent();
+            }}
+            onConfirmed={(url) => {
+              setIntentStatus("confirmed");
+              if (url) setExplorerUrl(url);
             }}
           />
         )}

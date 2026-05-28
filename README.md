@@ -123,7 +123,7 @@ Set `DUEL_ADMIN_EMAILS` to that address so the admin nav appears.
 
 1. Set `CRYPTO_TREASURY_ADDRESS` to the wallet that receives USDC on **Base** and **Polygon** (same address on both chains).
 2. Optionally set `BASE_RPC_URL` and `POLYGON_RPC_URL` (Alchemy/Infura recommended for production; public RPCs work for dev).
-3. Users subscribe at `/dashboard/billing` — send the exact USDC amount shown; the server auto-detects the transfer and activates the tier for 30 days.
+3. Users subscribe at `/dashboard/billing` — connect a browser wallet (MetaMask, Rabby, etc.) and pay with USDC on Base or Polygon. The server verifies the transfer and activates the tier for 30 days.
 4. Card checkout in the UI is intentionally disabled (shows an error). Only USDC works.
 
 Tiers: Indie $19, Pro $49, Team $199 (USDC, 6-decimal exact match).

@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import { useCryptoCheckoutPayment } from "@/hooks/useCryptoCheckoutPayment";
 
 export type CheckoutTab = "card" | "crypto";
 
@@ -411,7 +412,9 @@ function CardBrandDot({ color }: { color: string }) {
 type Chain = "base" | "polygon";
 
 interface CryptoIntent {
+  intentId: string;
   amountUsdc: string;
+  amountMicroUsdc: number;
   treasuryAddress: string;
   chain: Chain;
   expiresAt: string;
@@ -425,6 +428,7 @@ export function StripeCryptoPanel({
   loading,
   apiError,
   onRetry,
+  onConfirmed,
 }: {
   chain: Chain;
   onChainChange: (chain: Chain) => void;
@@ -433,14 +437,22 @@ export function StripeCryptoPanel({
   loading: boolean;
   apiError: string | null;
   onRetry: () => void;
+  onConfirmed: (explorerUrl: string | null) => void;
 }) {
-  const [copied, setCopied] = useState<"amount" | "address" | null>(null);
-
-  const copy = async (text: string, which: "amount" | "address") => {
-    await navigator.clipboard.writeText(text);
-    setCopied(which);
-    setTimeout(() => setCopied(null), 2000);
-  };
+  const payment = useCryptoCheckoutPayment({
+    intent:
+      intent && intentStatus === "pending"
+        ? {
+            intentId: intent.intentId,
+            amountUsdc: intent.amountUsdc,
+            amountMicroUsdc: intent.amountMicroUsdc,
+            treasuryAddress: intent.treasuryAddress,
+            chain: intent.chain,
+          }
+        : null,
+    chain,
+    onConfirmed,
+  });
 
   const expiresInMs =
     intent?.expiresAt != null
@@ -448,6 +460,17 @@ export function StripeCryptoPanel({
       : null;
   const expiresInSec =
     expiresInMs != null ? Math.max(0, Math.floor(expiresInMs / 1000)) : null;
+
+  const payLabel =
+    intent != null ? `Pay ${intent.amountUsdc} USDC` : "Pay with USDC";
+
+  const isBusy =
+    payment.phase === "paying" ||
+    payment.phase === "confirming" ||
+    payment.phase === "processing" ||
+    payment.isConnecting ||
+    payment.isSwitching ||
+    payment.isWaitingReceipt;
 
   return (
     <div>
@@ -460,7 +483,8 @@ export function StripeCryptoPanel({
           lineHeight: 1.55,
         }}
       >
-        Pay with USDC stablecoin through Stripe Crypto.
+        Pay with USDC stablecoin through Stripe Crypto. Connect your wallet to
+        complete payment.
       </p>
 
       <p
@@ -483,7 +507,7 @@ export function StripeCryptoPanel({
             key={c}
             type="button"
             onClick={() => onChainChange(c)}
-            disabled={loading}
+            disabled={loading || isBusy}
             className="flex-1 py-2 px-3 transition-colors disabled:opacity-50"
             style={{
               background: chain === c ? STRIPE.card : "#fafbfc",
@@ -502,7 +526,7 @@ export function StripeCryptoPanel({
         ))}
       </div>
 
-      {apiError && (
+      {(apiError || payment.error) && (
         <p
           className="mb-4 rounded-md px-3 py-2"
           style={{
@@ -513,7 +537,7 @@ export function StripeCryptoPanel({
           }}
           role="alert"
         >
-          {apiError}
+          {apiError ?? payment.error}
         </p>
       )}
 
@@ -561,18 +585,58 @@ export function StripeCryptoPanel({
           className="space-y-4 rounded-md p-4"
           style={{ border: `1px solid ${STRIPE.border}`, background: "#fafbfc" }}
         >
-          <CopyRow
-            label="Amount"
-            value={`${intent.amountUsdc} USDC`}
-            onCopy={() => copy(intent.amountUsdc, "amount")}
-            copied={copied === "amount"}
-          />
-          <CopyRow
-            label="Stripe Crypto address"
-            value={intent.treasuryAddress}
-            onCopy={() => copy(intent.treasuryAddress, "address")}
-            copied={copied === "address"}
-          />
+          <div>
+            <p
+              className="mb-1"
+              style={{
+                fontSize: "12px",
+                fontWeight: 500,
+                color: STRIPE.muted,
+                fontFamily: "system-ui, sans-serif",
+              }}
+            >
+              Amount due
+            </p>
+            <p
+              style={{
+                fontSize: "20px",
+                fontWeight: 600,
+                color: STRIPE.text,
+                fontFamily: "system-ui, sans-serif",
+              }}
+            >
+              {intent.amountUsdc} USDC
+            </p>
+          </div>
+
+          {payment.isConnected && payment.truncatedAddress && (
+            <div>
+              <p
+                className="mb-1"
+                style={{
+                  fontSize: "12px",
+                  fontWeight: 500,
+                  color: STRIPE.muted,
+                  fontFamily: "system-ui, sans-serif",
+                }}
+              >
+                Connected wallet
+              </p>
+              <p
+                style={{
+                  fontSize: "13px",
+                  color: STRIPE.text,
+                  fontFamily: "ui-monospace, monospace",
+                }}
+              >
+                {payment.truncatedAddress}
+                {payment.usdcBalanceLabel
+                  ? ` · ${payment.usdcBalanceLabel}`
+                  : ""}
+              </p>
+            </div>
+          )}
+
           <p
             style={{
               fontSize: "12px",
@@ -581,74 +645,69 @@ export function StripeCryptoPanel({
             }}
           >
             {expiresInSec != null && expiresInSec > 0
-              ? `Expires in ${Math.floor(expiresInSec / 60)}m ${expiresInSec % 60}s`
+              ? `Session expires in ${Math.floor(expiresInSec / 60)}m ${expiresInSec % 60}s`
               : "Session expired"}
           </p>
-          <p
-            className="animate-pulse"
-            style={{
-              fontSize: "13px",
-              color: STRIPE.accent,
-              fontFamily: "system-ui, sans-serif",
-            }}
-          >
-            Confirming your Stripe Crypto payment…
-          </p>
+
+          {!payment.isConnected ? (
+            <button
+              type="button"
+              onClick={() => void payment.connectWallet()}
+              disabled={payment.isConnecting}
+              className="w-full rounded-md py-2.5 transition-opacity disabled:opacity-60"
+              style={{
+                background: STRIPE.accent,
+                color: "#fff",
+                fontSize: "14px",
+                fontWeight: 500,
+                fontFamily: "system-ui, sans-serif",
+              }}
+            >
+              {payment.isConnecting ? "Connecting…" : "Connect wallet"}
+            </button>
+          ) : payment.phase === "wrong_chain" ? (
+            <button
+              type="button"
+              onClick={() => void payment.switchToChain()}
+              disabled={payment.isSwitching}
+              className="w-full rounded-md py-2.5 transition-opacity disabled:opacity-60"
+              style={{
+                background: STRIPE.accent,
+                color: "#fff",
+                fontSize: "14px",
+                fontWeight: 500,
+                fontFamily: "system-ui, sans-serif",
+              }}
+            >
+              {payment.isSwitching
+                ? "Switching network…"
+                : `Switch to ${chain === "base" ? "Base" : "Polygon"}`}
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => void payment.payWithUsdc()}
+              disabled={isBusy}
+              className="w-full rounded-md py-2.5 transition-opacity disabled:opacity-60"
+              style={{
+                background: STRIPE.accent,
+                color: "#fff",
+                fontSize: "14px",
+                fontWeight: 500,
+                fontFamily: "system-ui, sans-serif",
+              }}
+            >
+              {payment.phase === "paying"
+                ? "Confirm in your wallet…"
+                : payment.phase === "confirming" || payment.isWaitingReceipt
+                  ? "Waiting for transaction…"
+                  : payment.phase === "processing"
+                    ? "Processing payment…"
+                    : payLabel}
+            </button>
+          )}
         </div>
       )}
-    </div>
-  );
-}
-
-function CopyRow({
-  label,
-  value,
-  onCopy,
-  copied,
-}: {
-  label: string;
-  value: string;
-  onCopy: () => void;
-  copied: boolean;
-}) {
-  return (
-    <div>
-      <p
-        className="mb-1"
-        style={{
-          fontSize: "12px",
-          fontWeight: 500,
-          color: STRIPE.muted,
-          fontFamily: "system-ui, sans-serif",
-        }}
-      >
-        {label}
-      </p>
-      <div className="flex items-start gap-3">
-        <code
-          className="flex-1 break-all"
-          style={{
-            fontSize: "13px",
-            color: STRIPE.text,
-            fontFamily: "ui-monospace, monospace",
-          }}
-        >
-          {value}
-        </code>
-        <button
-          type="button"
-          onClick={onCopy}
-          style={{
-            fontSize: "12px",
-            fontWeight: 500,
-            color: STRIPE.accent,
-            fontFamily: "system-ui, sans-serif",
-            flexShrink: 0,
-          }}
-        >
-          {copied ? "Copied" : "Copy"}
-        </button>
-      </div>
     </div>
   );
 }

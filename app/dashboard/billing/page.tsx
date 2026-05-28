@@ -5,6 +5,7 @@ import { PAID_TIERS, tierDisplayName, isPaidSubscription } from "@/lib/billing/t
 import { isCryptoBillingConfigured } from "@/lib/billing/crypto/config";
 import { db, schema } from "@/db/client";
 import { BillingCheckout } from "./BillingCheckout";
+import { BillingWeb3Provider } from "./BillingWeb3Provider";
 
 export const dynamic = "force-dynamic";
 
@@ -71,11 +72,13 @@ export default async function BillingPage() {
         />
       </section>
 
-      <BillingCheckout
-        tiers={PAID_TIERS}
-        currentTier={tier}
-        cryptoConfigured={isCryptoBillingConfigured()}
-      />
+      <BillingWeb3Provider>
+        <BillingCheckout
+          tiers={PAID_TIERS}
+          currentTier={tier}
+          cryptoConfigured={isCryptoBillingConfigured()}
+        />
+      </BillingWeb3Provider>
     </>
   );
 }
