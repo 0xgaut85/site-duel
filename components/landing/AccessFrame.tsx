@@ -83,7 +83,7 @@ export function AccessFrame() {
             <p className="text-paper-faint text-[clamp(15px,1.15vw,17px)] leading-[1.55] max-w-[38ch]">
             Sign in with a magic link and generate API keys in settings today.
             Paid plans at launch: Indie $19, Pro $49, Team $199 per month.
-            Subscribe via Stripe — card or Stripe Crypto — from the dashboard billing page.
+            Subscribe via Stripe, card or Stripe Crypto, from the dashboard billing page.
             </p>
           </div>
 

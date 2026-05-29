@@ -616,8 +616,8 @@ export function StripeCryptoPanel({
                 lineHeight: 1.45,
               }}
             >
-              Send exactly this amount on {chain === "base" ? "Base" : "Polygon"} —
-              includes a unique verification suffix.
+              Send exactly this amount on {chain === "base" ? "Base" : "Polygon"}.
+              Includes a unique verification suffix.
             </p>
           </div>
 

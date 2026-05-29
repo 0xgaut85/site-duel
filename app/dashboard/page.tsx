@@ -110,7 +110,7 @@ export default async function DashboardOverviewPage({ searchParams }: PageProps)
           value={
             subscribed
               ? `${formatNumber(used)} / ${formatNumber(quota)}`
-              : "—"
+              : "-"
           }
           hint={
             subscribed
@@ -145,8 +145,8 @@ export default async function DashboardOverviewPage({ searchParams }: PageProps)
             className="text-ink-soft max-w-[58ch] mb-8"
             style={{ fontSize: "1rem", lineHeight: 1.55 }}
           >
-            Indie ($19/mo), Pro ($49/mo), and Team ($199/mo). Subscribe via
-            Stripe — card or Stripe Crypto — from the billing page.
+            Indie ($19/mo), Pro ($49/mo), and Team ($199/mo). Subscribe on the
+            billing page with Stripe, card or Stripe Crypto.
           </p>
           <Link
             href="/dashboard/billing"

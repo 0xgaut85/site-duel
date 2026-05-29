@@ -40,7 +40,7 @@ export async function sendWaitlistEmails(email: string, total: number): Promise<
       "We'll send you a single email when private access opens.",
       "No marketing, no nonsense.",
       "",
-      "— Duel Agents",
+      "- Duel Agents",
       "https://duelagents.com",
     ].join("\n"),
   });

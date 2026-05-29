@@ -284,7 +284,7 @@ function FreshKeyBanner({
           className="font-mono text-rust"
           style={{ fontSize: "10.5px", letterSpacing: "0.28em" }}
         >
-          / NEW KEY — SAVE IT NOW, IT WON'T BE SHOWN AGAIN
+          / NEW KEY: SAVE IT NOW, IT WON&apos;T BE SHOWN AGAIN
         </p>
         <button
           type="button"

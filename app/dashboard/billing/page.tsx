@@ -51,7 +51,7 @@ export default async function BillingPage() {
           value={
             subscribed
               ? `${formatNumber(subscription?.callsUsedThisPeriod ?? 0)} / ${formatNumber(subscription?.monthlyCallQuota ?? 0)}`
-              : "—"
+              : "-"
           }
         />
       </section>

@@ -32,7 +32,7 @@ export async function sendCryptoPaymentConfirmation(opts: {
   await resend.emails.send({
     from: FROM,
     to: opts.to.replace(/[\r\n]/g, ""),
-    subject: `Duel Agents — ${tierLabel} subscription confirmed`,
+    subject: `Duel Agents: ${tierLabel} subscription confirmed`,
     text: [
       "Payment received via Stripe Crypto.",
       "",
@@ -43,7 +43,7 @@ export async function sendCryptoPaymentConfirmation(opts: {
       "",
       "You can now create API keys in Settings and start routing through Duel Agents.",
       "",
-      "— Duel Agents",
+      "- Duel Agents",
       "https://duelagents.com/dashboard",
     ].join("\n"),
     html: `<!doctype html>

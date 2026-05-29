@@ -104,7 +104,7 @@ export function IntegrationsSection({
         >
           {canCreateKeys
             ? "Drop your Duel API key in and point the tool at our base URL. Every prompt from that tool will route through Duel from then on."
-            : "Subscribe via Stripe and create an API key first — then copy these snippets."}
+            : "Subscribe via Stripe and create an API key first, then copy these snippets."}
         </p>
       </div>
 
