@@ -2,6 +2,10 @@
 
 import Image from "next/image";
 import { useState } from "react";
+import {
+  CardBrandMarks,
+  ChainNetworkIcon,
+} from "@/components/billing/CheckoutBrandIcons";
 import { useCryptoCheckoutPayment } from "@/hooks/useCryptoCheckoutPayment";
 
 export type CheckoutTab = "card" | "crypto";
@@ -211,6 +215,61 @@ export function StripeCardForm({
 
   return (
     <form onSubmit={handleSubmit}>
+      <div className="grid grid-cols-2 gap-3 mb-4">
+        <label className="block">
+          <span
+            className="block mb-1.5"
+            style={{
+              fontSize: "13px",
+              fontWeight: 500,
+              color: STRIPE.text,
+              fontFamily: "system-ui, sans-serif",
+            }}
+          >
+            First name
+          </span>
+          <input
+            type="text"
+            placeholder="Jane"
+            autoComplete="cc-given-name"
+            className={inputClass}
+            style={{
+              padding: "12px",
+              fontSize: "15px",
+              border: `1px solid ${STRIPE.border}`,
+              color: STRIPE.text,
+              fontFamily: "system-ui, sans-serif",
+            }}
+          />
+        </label>
+        <label className="block">
+          <span
+            className="block mb-1.5"
+            style={{
+              fontSize: "13px",
+              fontWeight: 500,
+              color: STRIPE.text,
+              fontFamily: "system-ui, sans-serif",
+            }}
+          >
+            Last name
+          </span>
+          <input
+            type="text"
+            placeholder="Doe"
+            autoComplete="cc-family-name"
+            className={inputClass}
+            style={{
+              padding: "12px",
+              fontSize: "15px",
+              border: `1px solid ${STRIPE.border}`,
+              color: STRIPE.text,
+              fontFamily: "system-ui, sans-serif",
+            }}
+          />
+        </label>
+      </div>
+
       <label className="block mb-4">
         <span
           className="block mb-1.5"
@@ -230,20 +289,15 @@ export function StripeCardForm({
             autoComplete="cc-number"
             className={inputClass}
             style={{
-              padding: "12px 40px 12px 12px",
+              padding: "12px 88px 12px 12px",
               fontSize: "15px",
               border: `1px solid ${STRIPE.border}`,
               color: STRIPE.text,
               fontFamily: "system-ui, sans-serif",
             }}
           />
-          <div
-            className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1"
-            aria-hidden
-          >
-            <CardBrandDot color="#1a1f71" />
-            <CardBrandDot color="#eb001b" />
-            <CardBrandDot color="#006fcf" />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2">
+            <CardBrandMarks />
           </div>
         </div>
       </label>
@@ -400,15 +454,6 @@ export function StripeCardForm({
   );
 }
 
-function CardBrandDot({ color }: { color: string }) {
-  return (
-    <span
-      className="inline-block rounded-sm"
-      style={{ width: 22, height: 14, background: color, opacity: 0.85 }}
-    />
-  );
-}
-
 type Chain = "base" | "polygon";
 
 interface CryptoIntent {
@@ -508,7 +553,7 @@ export function StripeCryptoPanel({
             type="button"
             onClick={() => onChainChange(c)}
             disabled={loading || isBusy}
-            className="flex-1 py-2 px-3 transition-colors disabled:opacity-50"
+            className="flex-1 py-2 px-3 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
             style={{
               background: chain === c ? STRIPE.card : "#fafbfc",
               borderBottom:
@@ -521,7 +566,8 @@ export function StripeCryptoPanel({
               fontFamily: "system-ui, sans-serif",
             }}
           >
-            {c === "base" ? "Base network" : "Polygon network"}
+            <ChainNetworkIcon chain={c} size={18} />
+            {c === "base" ? "Base" : "Polygon"}
           </button>
         ))}
       </div>
@@ -699,7 +745,7 @@ export function StripeCryptoPanel({
             <button
               type="button"
               onClick={() => void payment.payWithUsdc()}
-              disabled={isBusy || !payment.balanceReady}
+              disabled={isBusy}
               className="w-full rounded-md py-2.5 transition-opacity disabled:opacity-60"
               style={{
                 background: STRIPE.accent,
@@ -715,7 +761,9 @@ export function StripeCryptoPanel({
                   ? "Waiting for transaction…"
                   : payment.phase === "processing"
                     ? "Processing payment…"
-                    : payLabel}
+                    : payment.isFetchingUsdcBalance
+                      ? "Checking balance…"
+                      : payLabel}
             </button>
           )}
         </div>

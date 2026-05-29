@@ -4,6 +4,7 @@ import { z } from "zod";
 import { auth } from "@/lib/auth";
 import { isCryptoBillingConfigured } from "@/lib/billing/crypto/config";
 import { createCryptoPaymentIntent } from "@/lib/billing/crypto/intents";
+import { cryptoIntentErrorMessage } from "@/lib/billing/crypto/intent-errors";
 
 export const runtime = "nodejs";
 
@@ -47,7 +48,7 @@ export async function POST(req: Request) {
   } catch (err) {
     console.error("[billing] create crypto intent failed:", err);
     return NextResponse.json(
-      { ok: false, message: "Could not create payment intent." },
+      { ok: false, message: cryptoIntentErrorMessage(err) },
       { status: 500 },
     );
   }

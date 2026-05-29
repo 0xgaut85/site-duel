@@ -94,12 +94,6 @@ export function useCryptoCheckoutPayment(opts: {
       chainId: targetChainId,
     });
 
-  const balanceReady =
-    !isConnected ||
-    !onTargetChain ||
-    !intent ||
-    usdcBalance != null;
-
   useEffect(() => {
     if (!intent) {
       setPhase("idle");
@@ -287,7 +281,6 @@ export function useCryptoCheckoutPayment(opts: {
     truncatedAddress: address ? truncateAddress(address) : null,
     usdcBalanceLabel:
       usdcBalance != null ? `${formatUsdcBalance(usdcBalance)} USDC` : null,
-    balanceReady,
     isFetchingUsdcBalance,
     phase,
     error,

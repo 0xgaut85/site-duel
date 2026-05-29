@@ -1,37 +1,26 @@
+import { decodeEventLog, parseAbiItem, type Address, type Hash } from "viem";
 import {
-  createPublicClient,
-  decodeEventLog,
-  http,
-  parseAbiItem,
-  type Address,
-  type Hash,
-} from "viem";
-import { base, polygon } from "viem/chains";
-import {
-  getRpcUrl,
   getTreasuryAddress,
   USDC_CONTRACTS,
   EXPLORER_TX_URL,
   type CryptoChain,
 } from "@/lib/billing/crypto/config";
+import { withChainRpc } from "@/lib/billing/crypto/rpc";
 
 const transferEvent = parseAbiItem(
   "event Transfer(address indexed from, address indexed to, uint256 value)",
 );
 
-function getClient(chain: CryptoChain) {
-  const rpcUrl = getRpcUrl(chain);
-  if (!rpcUrl) throw new Error(`RPC URL not configured for ${chain}.`);
-
-  return createPublicClient({
-    chain: chain === "base" ? base : polygon,
-    transport: http(rpcUrl),
-  });
-}
-
 export async function getCurrentBlockNumber(chain: CryptoChain): Promise<bigint> {
-  const client = getClient(chain);
-  return client.getBlockNumber();
+  try {
+    return await withChainRpc(chain, (client) => client.getBlockNumber());
+  } catch (err) {
+    console.error(
+      `[crypto] getBlockNumber failed for ${chain}, scanning from genesis:`,
+      err,
+    );
+    return 0n;
+  }
 }
 
 export interface MatchedTransfer {
@@ -53,7 +42,7 @@ export async function findMatchingUsdcTransfer(opts: {
   const treasury = getTreasuryAddress();
   if (!treasury) return null;
 
-  const client = getClient(opts.chain);
+  return withChainRpc(opts.chain, async (client) => {
   const usdc = USDC_CONTRACTS[opts.chain];
   const excluded = new Set((opts.excludeTxHashes ?? []).map((h) => h.toLowerCase()));
 
@@ -80,6 +69,7 @@ export async function findMatchingUsdcTransfer(opts: {
   }
 
   return null;
+  });
 }
 
 export function explorerUrl(chain: CryptoChain, txHash: string): string {
@@ -96,7 +86,7 @@ export async function verifyUsdcTransferTx(opts: {
   treasury: Address;
   amountMicroUsdc: number;
 }): Promise<MatchedTransfer | null> {
-  const client = getClient(opts.chain);
+  return withChainRpc(opts.chain, async (client) => {
   const usdc = USDC_CONTRACTS[opts.chain];
 
   const receipt = await client.getTransactionReceipt({ hash: opts.txHash });
@@ -134,4 +124,5 @@ export async function verifyUsdcTransferTx(opts: {
   }
 
   return null;
+  });
 }

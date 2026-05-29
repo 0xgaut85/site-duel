@@ -1,4 +1,5 @@
 import type { Address } from "viem";
+import { getPrimaryRpcUrl, getRpcUrls } from "@/lib/billing/crypto/rpc";
 
 export type CryptoChain = "base" | "polygon";
 
@@ -20,17 +21,26 @@ export function getTreasuryAddress(): Address | null {
   return raw as Address;
 }
 
-const PUBLIC_RPC_FALLBACK: Record<CryptoChain, string> = {
-  base: "https://mainnet.base.org",
-  polygon: "https://polygon-rpc.com",
-};
-
 export function getRpcUrl(chain: CryptoChain): string | null {
-  const envKey = chain === "base" ? "BASE_RPC_URL" : "POLYGON_RPC_URL";
-  const fromEnv = process.env[envKey]?.trim();
-  if (fromEnv) return fromEnv;
-  return PUBLIC_RPC_FALLBACK[chain];
+  try {
+    return getPrimaryRpcUrl(chain);
+  } catch {
+    return null;
+  }
 }
+
+export function hasRpcForChain(chain: CryptoChain): boolean {
+  try {
+    return getRpcUrls(chain).length > 0;
+  } catch {
+    return false;
+  }
+}
+
+const CLIENT_RPC_FALLBACK: Record<CryptoChain, string> = {
+  base: "https://mainnet.base.org",
+  polygon: "https://polygon.llamarpc.com",
+};
 
 /** Client-side RPC URLs (NEXT_PUBLIC_*), aligned with server fallbacks. */
 export function getPublicRpcUrl(chain: CryptoChain): string {
@@ -39,9 +49,13 @@ export function getPublicRpcUrl(chain: CryptoChain): string {
   const fromEnv =
     typeof process !== "undefined" ? process.env[envKey]?.trim() : undefined;
   if (fromEnv) return fromEnv;
-  return PUBLIC_RPC_FALLBACK[chain];
+  return CLIENT_RPC_FALLBACK[chain];
 }
 
 export function isCryptoBillingConfigured(): boolean {
-  return Boolean(getTreasuryAddress() && getRpcUrl("base") && getRpcUrl("polygon"));
+  return Boolean(
+    getTreasuryAddress() &&
+      hasRpcForChain("base") &&
+      hasRpcForChain("polygon"),
+  );
 }
