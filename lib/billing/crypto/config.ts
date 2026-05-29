@@ -1,12 +1,18 @@
 import type { Address } from "viem";
+import { getAddress, isAddress } from "viem";
 import { getPrimaryRpcUrl, getRpcUrls } from "@/lib/billing/crypto/rpc";
 
 export type CryptoChain = "base" | "polygon";
 
+/** Circle native USDC — see https://developers.circle.com/stablecoins/usdc-contract-addresses */
 export const USDC_CONTRACTS: Record<CryptoChain, Address> = {
-  base: "0x833589fCD6eDb6E08f4c7C32D458f1eb69470eB70",
-  polygon: "0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359",
+  base: getAddress("0x833589fCD6eDb6E08f4c7C32D4f71b54bdA02913"),
+  polygon: getAddress("0x3c499c542cEF5E3811e1192ce70d8cC03d5c3359"),
 };
+
+export function normalizeCryptoAddress(raw: string): Address {
+  return getAddress(raw.trim());
+}
 
 export const EXPLORER_TX_URL: Record<CryptoChain, string> = {
   base: "https://basescan.org/tx/",
@@ -17,8 +23,12 @@ export const INTENT_TTL_MS = 30 * 60 * 1000;
 
 export function getTreasuryAddress(): Address | null {
   const raw = process.env.CRYPTO_TREASURY_ADDRESS?.trim();
-  if (!raw || !/^0x[a-fA-F0-9]{40}$/.test(raw)) return null;
-  return raw as Address;
+  if (!raw || !isAddress(raw)) return null;
+  try {
+    return getAddress(raw);
+  } catch {
+    return null;
+  }
 }
 
 export function getRpcUrl(chain: CryptoChain): string | null {

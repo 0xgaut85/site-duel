@@ -12,7 +12,7 @@ import {
 } from "wagmi";
 import { injected } from "wagmi/connectors";
 import type { Address, PublicClient } from "viem";
-import { UserRejectedRequestError } from "viem";
+import { getAddress, UserRejectedRequestError } from "viem";
 import type { CryptoChain } from "@/lib/billing/crypto/config";
 import {
   CRYPTO_CHAIN_IDS,
@@ -257,7 +257,7 @@ export function useCryptoCheckoutPayment(opts: {
         address: usdcAddress(paymentChain),
         abi: erc20Abi,
         functionName: "transfer",
-        args: [intent.treasuryAddress as Address, required],
+        args: [getAddress(intent.treasuryAddress), required],
       });
 
       setTxHash(hash);

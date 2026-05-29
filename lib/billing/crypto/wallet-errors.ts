@@ -1,5 +1,6 @@
 import {
   InsufficientFundsError,
+  InvalidAddressError,
   UserRejectedRequestError,
 } from "viem";
 import type { CryptoChain } from "./config";
@@ -45,6 +46,13 @@ export function formatWalletPaymentError(
 ): string {
   if (err instanceof UserRejectedRequestError) {
     return "";
+  }
+
+  if (
+    err instanceof InvalidAddressError ||
+    collectErrorText(err).includes("checksum counterpart")
+  ) {
+    return "Payment configuration error. Contact support — billing address is misconfigured.";
   }
 
   const msg = collectErrorText(err);

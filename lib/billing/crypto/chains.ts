@@ -1,5 +1,5 @@
 import { base, polygon } from "viem/chains";
-import type { Chain } from "viem";
+import type { Address, Chain } from "viem";
 import type { CryptoChain } from "@/lib/billing/crypto/config";
 import { USDC_CONTRACTS } from "@/lib/billing/crypto/config";
 
@@ -22,7 +22,7 @@ export function chainLabel(chain: CryptoChain): string {
   return chain === "base" ? "Base" : "Polygon";
 }
 
-export function usdcAddress(chain: CryptoChain) {
+export function usdcAddress(chain: CryptoChain): Address {
   return USDC_CONTRACTS[chain];
 }
 
