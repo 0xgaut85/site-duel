@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   useAccount,
   useConnect,
+  useDisconnect,
   usePublicClient,
   useSwitchChain,
   useWriteContract,
@@ -80,6 +81,7 @@ export function useCryptoCheckoutPayment(opts: {
   const paymentChain = intent?.chain ?? chain;
   const { address, chainId, isConnected } = useAccount();
   const { connectAsync, isPending: isConnecting } = useConnect();
+  const { disconnectAsync, isPending: isDisconnecting } = useDisconnect();
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
 
@@ -160,6 +162,36 @@ export function useCryptoCheckoutPayment(opts: {
     }
   }, [connectAsync]);
 
+  const disconnectWallet = useCallback(async () => {
+    setError(null);
+    setTxHash(null);
+    setUsdcBalance(null);
+    setPhase("idle");
+    try {
+      await disconnectAsync();
+    } catch {
+      /* ignore */
+    }
+  }, [disconnectAsync]);
+
+  const changeWallet = useCallback(async () => {
+    setError(null);
+    setTxHash(null);
+    setUsdcBalance(null);
+    setPhase("connecting");
+    try {
+      await disconnectAsync();
+      await connectAsync({ connector: injected() });
+    } catch (err) {
+      if (err instanceof UserRejectedRequestError) {
+        setError(null);
+      } else {
+        setError("Could not connect wallet. Try again.");
+      }
+      setPhase("idle");
+    }
+  }, [disconnectAsync, connectAsync]);
+
   const switchToChain = useCallback(async () => {
     setError(null);
     try {
@@ -220,6 +252,7 @@ export function useCryptoCheckoutPayment(opts: {
 
     try {
       const hash = await writeContractAsync({
+        account: address,
         chainId: targetChainId,
         address: usdcAddress(paymentChain),
         abi: erc20Abi,
@@ -231,6 +264,7 @@ export function useCryptoCheckoutPayment(opts: {
       setPhase("confirming");
     } catch (err) {
       setPhase("ready");
+      console.error("[crypto] USDC transfer failed:", err);
       if (err instanceof UserRejectedRequestError) {
         setError(null);
         return;
@@ -309,9 +343,12 @@ export function useCryptoCheckoutPayment(opts: {
     phase,
     error,
     isConnecting,
+    isDisconnecting,
     isSwitching,
     isWaitingReceipt,
     connectWallet,
+    disconnectWallet,
+    changeWallet,
     switchToChain,
     payWithUsdc,
     onTargetChain,

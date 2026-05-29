@@ -29,15 +29,27 @@ export async function GET(_req: Request, context: RouteContext) {
     return NextResponse.json({ ok: false, message: "No account found." }, { status: 404 });
   }
 
-  const status = await getCryptoIntentStatus({
-    intentId: id,
-    accountId: account.id,
-    userEmail: session.user.email,
-  });
+  try {
+    const status = await getCryptoIntentStatus({
+      intentId: id,
+      accountId: account.id,
+      userEmail: session.user.email,
+    });
 
-  if (!status) {
-    return NextResponse.json({ ok: false, message: "Intent not found." }, { status: 404 });
+    if (!status) {
+      return NextResponse.json({ ok: false, message: "Intent not found." }, { status: 404 });
+    }
+
+    return NextResponse.json({ ok: true, ...status });
+  } catch (err) {
+    console.error("[billing] crypto intent status failed:", err);
+    return NextResponse.json(
+      {
+        ok: true,
+        status: "pending" as const,
+        message: "Payment status is still syncing. Keep this tab open.",
+      },
+      { status: 200 },
+    );
   }
-
-  return NextResponse.json({ ok: true, ...status });
 }

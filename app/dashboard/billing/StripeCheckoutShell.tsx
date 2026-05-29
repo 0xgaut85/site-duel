@@ -514,6 +514,7 @@ export function StripeCryptoPanel({
     payment.phase === "confirming" ||
     payment.phase === "processing" ||
     payment.isConnecting ||
+    payment.isDisconnecting ||
     payment.isSwitching ||
     payment.isWaitingReceipt;
 
@@ -669,17 +670,48 @@ export function StripeCryptoPanel({
 
           {payment.isConnected && payment.truncatedAddress && (
             <div>
-              <p
-                className="mb-1"
-                style={{
-                  fontSize: "12px",
-                  fontWeight: 500,
-                  color: STRIPE.muted,
-                  fontFamily: "system-ui, sans-serif",
-                }}
+              <div
+                className="flex items-start justify-between gap-3 mb-1"
+                style={{ fontFamily: "system-ui, sans-serif" }}
               >
-                Connected wallet
-              </p>
+                <p
+                  style={{
+                    fontSize: "12px",
+                    fontWeight: 500,
+                    color: STRIPE.muted,
+                  }}
+                >
+                  Connected wallet
+                </p>
+                <div className="flex items-center gap-3 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => void payment.changeWallet()}
+                    disabled={isBusy || payment.isDisconnecting}
+                    className="transition-opacity hover:opacity-70 disabled:opacity-40"
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: 500,
+                      color: STRIPE.accent,
+                    }}
+                  >
+                    Change wallet
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => void payment.disconnectWallet()}
+                    disabled={isBusy || payment.isDisconnecting}
+                    className="transition-opacity hover:opacity-70 disabled:opacity-40"
+                    style={{
+                      fontSize: "12px",
+                      fontWeight: 500,
+                      color: STRIPE.muted,
+                    }}
+                  >
+                    Disconnect
+                  </button>
+                </div>
+              </div>
               <p
                 style={{
                   fontSize: "13px",

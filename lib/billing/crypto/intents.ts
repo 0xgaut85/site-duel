@@ -227,14 +227,19 @@ export async function getCryptoIntentStatus(opts: {
     .from(schema.cryptoPaymentIntents)
     .where(eq(schema.cryptoPaymentIntents.status, "confirmed"));
 
-  const match = await findMatchingUsdcTransfer({
-    chain: intent.chain,
-    amountMicroUsdc: intent.amountMicroUsdc,
-    scanFromBlock: BigInt(intent.scanFromBlock),
-    excludeTxHashes: claimedHashes
-      .map((r) => r.hash)
-      .filter((h): h is string => Boolean(h)) as Hash[],
-  });
+  let match: Awaited<ReturnType<typeof findMatchingUsdcTransfer>> = null;
+  try {
+    match = await findMatchingUsdcTransfer({
+      chain: intent.chain,
+      amountMicroUsdc: intent.amountMicroUsdc,
+      scanFromBlock: BigInt(intent.scanFromBlock),
+      excludeTxHashes: claimedHashes
+        .map((r) => r.hash)
+        .filter((h): h is string => Boolean(h)) as Hash[],
+    });
+  } catch (err) {
+    console.error("[crypto] findMatchingUsdcTransfer failed:", err);
+  }
 
   if (match) {
     await fulfillIntent(intent, match.txHash, opts.userEmail);
