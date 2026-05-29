@@ -8,6 +8,7 @@ export interface LiquidButtonProps {
   loading?: boolean;
   disabled?: boolean;
   darkBg?: boolean;
+  size?: "default" | "compact";
   href?: string;
   type?: "button" | "submit";
   className?: string;
@@ -22,6 +23,7 @@ export function LiquidButton({
   loading,
   disabled,
   darkBg,
+  size = "default",
   href,
   type = "submit",
   className = "",
@@ -77,10 +79,15 @@ export function LiquidButton({
     </>
   );
 
+  const compact = size === "compact";
+
   const style = {
     borderRadius: 9999,
-    padding: "clamp(0.95rem, 1.6vw, 1.2rem) clamp(1.3rem, 2.4vw, 2rem)",
-    fontSize: "clamp(11.5px, 1vw, 13.5px)",
+    padding: compact
+      ? "0.5rem 0.85rem"
+      : "clamp(0.95rem, 1.6vw, 1.2rem) clamp(1.3rem, 2.4vw, 2rem)",
+    fontSize: compact ? "10px" : "clamp(11.5px, 1vw, 13.5px)",
+    letterSpacing: compact ? "0.2em" : undefined,
     color: surface.color,
     background: surface.background,
     boxShadow: `${surface.innerRing}, ${surface.outerShadow}`,
@@ -88,7 +95,8 @@ export function LiquidButton({
     WebkitBackdropFilter: "blur(14px) saturate(140%)",
   } as const;
 
-  const cls = `group relative w-full overflow-hidden font-mono tracking-[0.24em] disabled:opacity-50 transition-[transform,box-shadow] duration-300 ${className}`;
+  const widthCls = compact ? "w-auto shrink-0" : "w-full";
+  const cls = `group relative ${widthCls} overflow-hidden font-mono tracking-[0.24em] disabled:opacity-50 transition-[transform,box-shadow] duration-300 ${className}`;
 
   if (href) {
     return (

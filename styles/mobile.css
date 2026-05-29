@@ -188,9 +188,10 @@
   /* ── Global chrome (every page) ── */
   [data-site-chrome] {
     mix-blend-mode: normal !important;
+  }
+
+  [data-site-chrome] a {
     color: var(--ink) !important;
-    font-size: 9px !important;
-    letter-spacing: 0.22em !important;
   }
 
   footer[data-site-footer] {

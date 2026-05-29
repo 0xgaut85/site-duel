@@ -20,13 +20,26 @@ export function getTreasuryAddress(): Address | null {
   return raw as Address;
 }
 
+const PUBLIC_RPC_FALLBACK: Record<CryptoChain, string> = {
+  base: "https://mainnet.base.org",
+  polygon: "https://polygon-rpc.com",
+};
+
 export function getRpcUrl(chain: CryptoChain): string | null {
   const envKey = chain === "base" ? "BASE_RPC_URL" : "POLYGON_RPC_URL";
   const fromEnv = process.env[envKey]?.trim();
   if (fromEnv) return fromEnv;
-  return chain === "base"
-    ? "https://mainnet.base.org"
-    : "https://polygon-rpc.com";
+  return PUBLIC_RPC_FALLBACK[chain];
+}
+
+/** Client-side RPC URLs (NEXT_PUBLIC_*), aligned with server fallbacks. */
+export function getPublicRpcUrl(chain: CryptoChain): string {
+  const envKey =
+    chain === "base" ? "NEXT_PUBLIC_BASE_RPC_URL" : "NEXT_PUBLIC_POLYGON_RPC_URL";
+  const fromEnv =
+    typeof process !== "undefined" ? process.env[envKey]?.trim() : undefined;
+  if (fromEnv) return fromEnv;
+  return PUBLIC_RPC_FALLBACK[chain];
 }
 
 export function isCryptoBillingConfigured(): boolean {

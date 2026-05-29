@@ -607,6 +607,18 @@ export function StripeCryptoPanel({
             >
               {intent.amountUsdc} USDC
             </p>
+            <p
+              className="mt-2"
+              style={{
+                fontSize: "12px",
+                color: STRIPE.muted,
+                fontFamily: "system-ui, sans-serif",
+                lineHeight: 1.45,
+              }}
+            >
+              Send exactly this amount on {chain === "base" ? "Base" : "Polygon"} —
+              includes a unique verification suffix.
+            </p>
           </div>
 
           {payment.isConnected && payment.truncatedAddress && (
@@ -687,7 +699,7 @@ export function StripeCryptoPanel({
             <button
               type="button"
               onClick={() => void payment.payWithUsdc()}
-              disabled={isBusy}
+              disabled={isBusy || !payment.balanceReady}
               className="w-full rounded-md py-2.5 transition-opacity disabled:opacity-60"
               style={{
                 background: STRIPE.accent,

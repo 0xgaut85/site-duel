@@ -1,4 +1,5 @@
 import { eq } from "drizzle-orm";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 import { requireSession } from "@/lib/session";
 import { ensureUserProvisioned } from "@/lib/provision";
 import { PAID_TIERS, tierDisplayName, isPaidSubscription } from "@/lib/billing/tiers";
@@ -40,24 +41,7 @@ export default async function BillingPage() {
 
   return (
     <>
-      <header className="mb-12">
-        <p
-          className="font-mono text-ink-faint mb-3"
-          style={{ fontSize: "11px", letterSpacing: "0.28em" }}
-        >
-          / BILLING
-        </p>
-        <h1
-          className="font-display font-medium text-ink"
-          style={{
-            fontSize: "clamp(2rem, 3.4vw, 2.8rem)",
-            lineHeight: 1.02,
-            letterSpacing: "-0.025em",
-          }}
-        >
-          Subscription.
-        </h1>
-      </header>
+      <PageHeader label="/ BILLING" title="Subscription." />
 
       <section className="grid grid-cols-1 sm:grid-cols-3 gap-px mb-12 bg-ink/10 border border-ink/10">
         <StatCard label="/ PLAN" value={tierDisplayName(tier)} />
@@ -85,7 +69,7 @@ export default async function BillingPage() {
 
 function StatCard({ label, value }: { label: string; value: string }) {
   return (
-    <div className="bg-paper p-8">
+    <div className="bg-paper p-8 border-t-2 border-transparent transition-colors hover:border-rust/40">
       <p
         className="font-mono text-ink-faint mb-4"
         style={{ fontSize: "10.5px", letterSpacing: "0.28em" }}

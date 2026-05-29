@@ -9,6 +9,7 @@
  */
 
 import { desc, eq } from "drizzle-orm";
+import { PageHeader } from "@/components/dashboard/PageHeader";
 import { requireSession } from "@/lib/session";
 import { hasActivePaidSubscription } from "@/lib/billing/subscription-access";
 import { db, schema } from "@/db/client";
@@ -53,24 +54,7 @@ export default async function SettingsPage() {
 
   return (
     <>
-      <header className="mb-12">
-        <p
-          className="font-mono text-ink-faint mb-3"
-          style={{ fontSize: "11px", letterSpacing: "0.28em" }}
-        >
-          / SETTINGS
-        </p>
-        <h1
-          className="font-display font-medium text-ink"
-          style={{
-            fontSize: "clamp(2rem, 3.4vw, 2.8rem)",
-            lineHeight: 1.02,
-            letterSpacing: "-0.025em",
-          }}
-        >
-          Keys & integrations.
-        </h1>
-      </header>
+      <PageHeader label="/ SETTINGS" title="Keys & integrations." />
 
       <div className="grid grid-cols-1 gap-16">
         <ApiKeysSection keys={keys} canCreateKeys={canCreateKeys} />

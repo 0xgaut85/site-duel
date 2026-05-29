@@ -7,6 +7,8 @@
  */
 
 import type { Metadata } from "next";
+import { DashboardLogo } from "@/components/dashboard/DashboardLogo";
+import { SiteTopActions } from "@/components/layout/SiteTopActions";
 import { LoginForm } from "./LoginForm";
 
 export const metadata: Metadata = {
@@ -19,15 +21,27 @@ export const dynamic = "force-dynamic";
 export default function LoginPage() {
   return (
     <main
-      className="min-h-screen flex items-center justify-center bg-paper text-ink px-6 py-12"
+      className="relative min-h-screen flex items-center justify-center bg-paper text-ink px-6 py-12"
       style={{ paddingLeft: "var(--frame-padding, 1.5rem)" }}
     >
+      <div
+        className="fixed z-50 pointer-events-auto"
+        style={{
+          top: "var(--frame-padding, 1.5rem)",
+          right: "var(--frame-padding, 1.5rem)",
+        }}
+      >
+        <SiteTopActions variant="light" showDuelApp={false} />
+      </div>
       <div className="w-full max-w-[28rem]">
+        <div className="mb-10">
+          <DashboardLogo href="/" />
+        </div>
         <p
-          className="font-mono text-ink-faint mb-12"
+          className="font-mono text-ink-faint mb-8"
           style={{ fontSize: "11.5px", letterSpacing: "0.28em" }}
         >
-          / DUEL AGENTS · SIGN IN
+          / SIGN IN
         </p>
         <h1
           className="font-display font-medium text-ink mb-2"

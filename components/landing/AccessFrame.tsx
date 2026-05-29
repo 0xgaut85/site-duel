@@ -1,8 +1,8 @@
 "use client";
 
 import { useCarousel } from "@/components/carousel/CarouselContext";
+import { SiteTopActions } from "@/components/layout/SiteTopActions";
 import { LiquidButton } from "@/components/ui/LiquidButton";
-import { X_TWITTER_URL } from "@/lib/site-links";
 
 /*
  * 04 · USE DUEL AGENTS — live product entry frame.
@@ -51,7 +51,7 @@ export function AccessFrame() {
         <span className="font-mono text-[10px] tracking-[0.3em] text-paper-faint">
           04 · USE DUEL AGENTS
         </span>
-        <div className="relative flex w-[min(100%,11.5rem)] flex-col items-stretch gap-3 pointer-events-auto">
+        <div className="relative flex flex-col items-end gap-3 pointer-events-auto">
           <button
             type="button"
             onClick={() => {
@@ -61,17 +61,7 @@ export function AccessFrame() {
           >
             BACK TO START
           </button>
-          <a
-            href={X_TWITTER_URL}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="font-mono text-[10px] tracking-[0.28em] text-paper-faint hover:text-paper transition-colors text-right"
-          >
-            X / TWITTER
-          </a>
-          <LiquidButton href="/dashboard" darkBg>
-            DUEL APP
-          </LiquidButton>
+          <SiteTopActions variant="dark" />
         </div>
       </div>
 

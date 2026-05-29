@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import {
   useAccount,
   useConnect,
+  usePublicClient,
   useReadContract,
   useSwitchChain,
   useWriteContract,
@@ -18,6 +19,7 @@ import {
   chainLabel,
   usdcAddress,
 } from "@/lib/billing/crypto/chains";
+import { formatWalletPaymentError } from "@/lib/billing/crypto/wallet-errors";
 import { erc20Abi } from "@/lib/billing/crypto/usdc";
 
 export type CryptoPaymentPhase =
@@ -36,6 +38,12 @@ interface CryptoIntentForPayment {
   treasuryAddress: string;
   chain: CryptoChain;
 }
+
+/** Minimum native balance for gas (wei). */
+const MIN_NATIVE_GAS: Record<CryptoChain, bigint> = {
+  base: 100_000_000_000_000n, // 0.0001 ETH
+  polygon: 50_000_000_000_000_000n, // 0.05 MATIC
+};
 
 function truncateAddress(address: string): string {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
@@ -57,6 +65,7 @@ export function useCryptoCheckoutPayment(opts: {
   const { connectAsync, isPending: isConnecting } = useConnect();
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
+  const publicClient = usePublicClient({ chainId: CRYPTO_CHAIN_IDS[chain] });
 
   const [phase, setPhase] = useState<CryptoPaymentPhase>("idle");
   const [error, setError] = useState<string | null>(null);
@@ -65,7 +74,11 @@ export function useCryptoCheckoutPayment(opts: {
   const targetChainId = CRYPTO_CHAIN_IDS[chain];
   const onTargetChain = chainId === targetChainId;
 
-  const { data: usdcBalance } = useReadContract({
+  const {
+    data: usdcBalance,
+    refetch: refetchUsdcBalance,
+    isFetching: isFetchingUsdcBalance,
+  } = useReadContract({
     address: usdcAddress(chain),
     abi: erc20Abi,
     functionName: "balanceOf",
@@ -80,6 +93,12 @@ export function useCryptoCheckoutPayment(opts: {
       hash: txHash ?? undefined,
       chainId: targetChainId,
     });
+
+  const balanceReady =
+    !isConnected ||
+    !onTargetChain ||
+    !intent ||
+    usdcBalance != null;
 
   useEffect(() => {
     if (!intent) {
@@ -137,12 +156,43 @@ export function useCryptoCheckoutPayment(opts: {
   const payWithUsdc = useCallback(async () => {
     if (!intent || !address) return;
 
+    if (!onTargetChain) {
+      setError(`Switch your wallet to ${chainLabel(chain)} before paying.`);
+      return;
+    }
+
     setError(null);
 
     const required = BigInt(intent.amountMicroUsdc);
-    if (usdcBalance != null && usdcBalance < required) {
+
+    const { data: freshBalance } = await refetchUsdcBalance();
+    const balance = freshBalance ?? usdcBalance;
+
+    if (balance == null) {
+      setError("USDC balance could not be read. Refresh or switch network.");
+      return;
+    }
+
+    if (balance < required) {
       setError("Insufficient USDC balance in your wallet.");
       return;
+    }
+
+    if (publicClient) {
+      try {
+        const nativeBalance = await publicClient.getBalance({ address });
+        if (nativeBalance < MIN_NATIVE_GAS[chain]) {
+          setError(
+            chain === "base"
+              ? "Add a small amount of ETH on Base for gas, then try again."
+              : "Add a small amount of MATIC on Polygon for gas, then try again.",
+          );
+          return;
+        }
+      } catch {
+        setError("Could not verify gas balance. Check your network and try again.");
+        return;
+      }
     }
 
     setPhase("paying");
@@ -164,15 +214,19 @@ export function useCryptoCheckoutPayment(opts: {
         setError(null);
         return;
       }
-      setError("Payment failed. Check your wallet balance and network, then try again.");
+      const message = formatWalletPaymentError(err, chain);
+      setError(message || "Transaction failed. Open your wallet for details.");
     }
   }, [
     intent,
     address,
+    onTargetChain,
+    chain,
     usdcBalance,
+    refetchUsdcBalance,
+    publicClient,
     writeContractAsync,
     targetChainId,
-    chain,
   ]);
 
   useEffect(() => {
@@ -233,6 +287,8 @@ export function useCryptoCheckoutPayment(opts: {
     truncatedAddress: address ? truncateAddress(address) : null,
     usdcBalanceLabel:
       usdcBalance != null ? `${formatUsdcBalance(usdcBalance)} USDC` : null,
+    balanceReady,
+    isFetchingUsdcBalance,
     phase,
     error,
     isConnecting,
