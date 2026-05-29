@@ -761,9 +761,7 @@ export function StripeCryptoPanel({
                   ? "Waiting for transaction…"
                   : payment.phase === "processing"
                     ? "Processing payment…"
-                    : payment.isFetchingUsdcBalance
-                      ? "Checking balance…"
-                      : payLabel}
+                    : payLabel}
             </button>
           )}
         </div>

@@ -37,19 +37,41 @@ export function hasRpcForChain(chain: CryptoChain): boolean {
   }
 }
 
-const CLIENT_RPC_FALLBACK: Record<CryptoChain, string> = {
-  base: "https://mainnet.base.org",
-  polygon: "https://polygon.llamarpc.com",
+const CLIENT_RPC_FALLBACKS: Record<CryptoChain, string[]> = {
+  base: [
+    "https://mainnet.base.org",
+    "https://base.llamarpc.com",
+    "https://1rpc.io/base",
+  ],
+  polygon: [
+    "https://polygon.llamarpc.com",
+    "https://polygon-rpc.com",
+    "https://rpc.ankr.com/polygon",
+    "https://1rpc.io/matic",
+  ],
 };
 
-/** Client-side RPC URLs (NEXT_PUBLIC_*), aligned with server fallbacks. */
-export function getPublicRpcUrl(chain: CryptoChain): string {
+/** Client-side RPC URLs (NEXT_PUBLIC_* first), with public fallbacks. */
+export function getPublicRpcUrls(chain: CryptoChain): string[] {
   const envKey =
     chain === "base" ? "NEXT_PUBLIC_BASE_RPC_URL" : "NEXT_PUBLIC_POLYGON_RPC_URL";
   const fromEnv =
     typeof process !== "undefined" ? process.env[envKey]?.trim() : undefined;
-  if (fromEnv) return fromEnv;
-  return CLIENT_RPC_FALLBACK[chain];
+
+  const seen = new Set<string>();
+  const urls: string[] = [];
+  for (const raw of [fromEnv, ...CLIENT_RPC_FALLBACKS[chain]]) {
+    const url = raw?.trim();
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    urls.push(url);
+  }
+  return urls;
+}
+
+/** Primary client RPC (first in {@link getPublicRpcUrls}). */
+export function getPublicRpcUrl(chain: CryptoChain): string {
+  return getPublicRpcUrls(chain)[0]!;
 }
 
 export function isCryptoBillingConfigured(): boolean {

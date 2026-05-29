@@ -1,17 +1,27 @@
 "use client";
 
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { WagmiProvider, createConfig, http, injected } from "wagmi";
+import { WagmiProvider, createConfig, injected } from "wagmi";
 import { base, polygon } from "viem/chains";
+import { fallback, http } from "viem";
 import { useState, type ReactNode } from "react";
-import { getPublicRpcUrl } from "@/lib/billing/crypto/config";
+import {
+  getPublicRpcUrls,
+  type CryptoChain,
+} from "@/lib/billing/crypto/config";
+
+function chainTransport(chain: CryptoChain) {
+  return fallback(
+    getPublicRpcUrls(chain).map((url) => http(url, { timeout: 12_000 })),
+  );
+}
 
 const wagmiConfig = createConfig({
   chains: [base, polygon],
   connectors: [injected()],
   transports: {
-    [base.id]: http(getPublicRpcUrl("base")),
-    [polygon.id]: http(getPublicRpcUrl("polygon")),
+    [base.id]: chainTransport("base"),
+    [polygon.id]: chainTransport("polygon"),
   },
   ssr: true,
 });

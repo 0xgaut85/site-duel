@@ -5,13 +5,12 @@ import {
   useAccount,
   useConnect,
   usePublicClient,
-  useReadContract,
   useSwitchChain,
   useWriteContract,
   useWaitForTransactionReceipt,
 } from "wagmi";
 import { injected } from "wagmi/connectors";
-import type { Address } from "viem";
+import type { Address, PublicClient } from "viem";
 import { UserRejectedRequestError } from "viem";
 import type { CryptoChain } from "@/lib/billing/crypto/config";
 import {
@@ -55,44 +54,71 @@ function formatUsdcBalance(balance: bigint): string {
   return `${whole}.${frac}`;
 }
 
+async function readUsdcBalance(
+  client: PublicClient,
+  chain: CryptoChain,
+  wallet: Address,
+): Promise<bigint | null> {
+  try {
+    return await client.readContract({
+      address: usdcAddress(chain),
+      abi: erc20Abi,
+      functionName: "balanceOf",
+      args: [wallet],
+    });
+  } catch {
+    return null;
+  }
+}
+
 export function useCryptoCheckoutPayment(opts: {
   intent: CryptoIntentForPayment | null;
   chain: CryptoChain;
   onConfirmed: (explorerUrl: string | null) => void;
 }) {
   const { intent, chain, onConfirmed } = opts;
+  const paymentChain = intent?.chain ?? chain;
   const { address, chainId, isConnected } = useAccount();
   const { connectAsync, isPending: isConnecting } = useConnect();
   const { switchChainAsync, isPending: isSwitching } = useSwitchChain();
   const { writeContractAsync } = useWriteContract();
-  const publicClient = usePublicClient({ chainId: CRYPTO_CHAIN_IDS[chain] });
+
+  const targetChainId = CRYPTO_CHAIN_IDS[paymentChain];
+  const publicClient = usePublicClient({ chainId: targetChainId });
+  const onTargetChain = chainId === targetChainId;
 
   const [phase, setPhase] = useState<CryptoPaymentPhase>("idle");
   const [error, setError] = useState<string | null>(null);
   const [txHash, setTxHash] = useState<Address | null>(null);
-
-  const targetChainId = CRYPTO_CHAIN_IDS[chain];
-  const onTargetChain = chainId === targetChainId;
-
-  const {
-    data: usdcBalance,
-    refetch: refetchUsdcBalance,
-    isFetching: isFetchingUsdcBalance,
-  } = useReadContract({
-    address: usdcAddress(chain),
-    abi: erc20Abi,
-    functionName: "balanceOf",
-    args: address ? [address] : undefined,
-    query: {
-      enabled: Boolean(address && onTargetChain && intent),
-    },
-  });
+  const [usdcBalance, setUsdcBalance] = useState<bigint | null>(null);
 
   const { isLoading: isWaitingReceipt, isSuccess: receiptConfirmed } =
     useWaitForTransactionReceipt({
       hash: txHash ?? undefined,
       chainId: targetChainId,
     });
+
+  useEffect(() => {
+    if (!address || !onTargetChain || !intent || !publicClient) {
+      setUsdcBalance(null);
+      return;
+    }
+
+    let cancelled = false;
+
+    const load = async () => {
+      const balance = await readUsdcBalance(publicClient, paymentChain, address);
+      if (!cancelled) setUsdcBalance(balance);
+    };
+
+    void load();
+    const id = window.setInterval(() => void load(), 15_000);
+
+    return () => {
+      cancelled = true;
+      window.clearInterval(id);
+    };
+  }, [address, onTargetChain, intent, publicClient, paymentChain]);
 
   useEffect(() => {
     if (!intent) {
@@ -142,42 +168,43 @@ export function useCryptoCheckoutPayment(opts: {
       if (err instanceof UserRejectedRequestError) {
         setError(null);
       } else {
-        setError(`Could not switch to ${chainLabel(chain)}. Try again in your wallet.`);
+        setError(
+          `Could not switch to ${chainLabel(paymentChain)}. Try again in your wallet.`,
+        );
       }
     }
-  }, [switchChainAsync, targetChainId, chain]);
+  }, [switchChainAsync, targetChainId, paymentChain]);
 
   const payWithUsdc = useCallback(async () => {
     if (!intent || !address) return;
 
     if (!onTargetChain) {
-      setError(`Switch your wallet to ${chainLabel(chain)} before paying.`);
+      setError(`Switch your wallet to ${chainLabel(paymentChain)} before paying.`);
       return;
     }
 
     setError(null);
-
     const required = BigInt(intent.amountMicroUsdc);
 
-    const { data: freshBalance } = await refetchUsdcBalance();
-    const balance = freshBalance ?? usdcBalance;
+    const balance =
+      publicClient != null
+        ? await readUsdcBalance(publicClient, paymentChain, address)
+        : null;
 
-    if (balance == null) {
-      setError("USDC balance could not be read. Refresh or switch network.");
-      return;
-    }
-
-    if (balance < required) {
-      setError("Insufficient USDC balance in your wallet.");
-      return;
+    if (balance != null) {
+      setUsdcBalance(balance);
+      if (balance < required) {
+        setError("Insufficient USDC balance in your wallet.");
+        return;
+      }
     }
 
     if (publicClient) {
       try {
         const nativeBalance = await publicClient.getBalance({ address });
-        if (nativeBalance < MIN_NATIVE_GAS[chain]) {
+        if (nativeBalance < MIN_NATIVE_GAS[paymentChain]) {
           setError(
-            chain === "base"
+            paymentChain === "base"
               ? "Add a small amount of ETH on Base for gas, then try again."
               : "Add a small amount of MATIC on Polygon for gas, then try again.",
           );
@@ -194,7 +221,7 @@ export function useCryptoCheckoutPayment(opts: {
     try {
       const hash = await writeContractAsync({
         chainId: targetChainId,
-        address: usdcAddress(chain),
+        address: usdcAddress(paymentChain),
         abi: erc20Abi,
         functionName: "transfer",
         args: [intent.treasuryAddress as Address, required],
@@ -208,16 +235,14 @@ export function useCryptoCheckoutPayment(opts: {
         setError(null);
         return;
       }
-      const message = formatWalletPaymentError(err, chain);
+      const message = formatWalletPaymentError(err, paymentChain);
       setError(message || "Transaction failed. Open your wallet for details.");
     }
   }, [
     intent,
     address,
     onTargetChain,
-    chain,
-    usdcBalance,
-    refetchUsdcBalance,
+    paymentChain,
     publicClient,
     writeContractAsync,
     targetChainId,
@@ -281,7 +306,6 @@ export function useCryptoCheckoutPayment(opts: {
     truncatedAddress: address ? truncateAddress(address) : null,
     usdcBalanceLabel:
       usdcBalance != null ? `${formatUsdcBalance(usdcBalance)} USDC` : null,
-    isFetchingUsdcBalance,
     phase,
     error,
     isConnecting,
